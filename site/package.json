@@ -1,0 +1,6 @@
+{
+  "name": "saurasakti-stock-manager-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive demo of the Saurasakti solar inventory system. Static site, no build step."
+}

@@ -1,0 +1,1806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saurasakti Stock Manager</title>
+<meta name="description" content="Parts-level inventory for a solar dealer: system kits, orders with stock reservation, purchase list, live alerts and Tally export. Interactive demo with sample data.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Saurasakti Stock Manager">
+<meta property="og:description" content="Interactive demo of the inventory system for Saurasakti Solar.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root { color-scheme: light; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+
+/* Layout: dark gradient sidebar + soft working area; cards on a cool grey ground. On phones the sidebar becomes a bottom tab bar. */
+/* Layout: macOS-style window. Frosted sidebar on the left, content on Apple grey; phones get a frosted bottom tab bar. */
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-2: #f2f2f5;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --line: rgba(0,0,0,.09);
+  --grid: rgba(0,0,0,.07);
+  --accent: #007aff;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(0,122,255,.12);
+  --side-bg: rgba(236,236,241,.78);
+  --side-ink: #1d1d1f;
+  --side-muted: #6e6e73;
+  --side-hover: rgba(0,0,0,.05);
+  --side-line: rgba(0,0,0,.09);
+  --sun: #ffb21f;
+  --sun-2: #f58a00;
+  --sun-soft: rgba(255,159,10,.16);
+  --ok: #1f8a3b;
+  --ok-soft: rgba(52,199,89,.16);
+  --warn: #a35200;
+  --warn-soft: rgba(255,159,10,.17);
+  --bad: #d3281e;
+  --bad-soft: rgba(255,59,48,.12);
+  --info: #0a63d6;
+  --info-soft: rgba(0,122,255,.11);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --shadow: 0 0 0 .5px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.04);
+  --f-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1c1e; --surface: #2c2c2e; --surface-2: #363638; --ink: #f5f5f7; --muted: #a1a1a8; --line: rgba(255,255,255,.11); --grid: rgba(255,255,255,.08);
+    --accent: #0a84ff; --accent-soft: rgba(10,132,255,.22);
+    --side-bg: rgba(44,44,46,.74); --side-ink: #f5f5f7; --side-muted: #a1a1a8; --side-hover: rgba(255,255,255,.07); --side-line: rgba(255,255,255,.1);
+    --sun-soft: rgba(255,159,10,.2);
+    --ok: #32d74b; --ok-soft: rgba(48,209,88,.18); --warn: #ffb340; --warn-soft: rgba(255,159,10,.18); --bad: #ff6961; --bad-soft: rgba(255,69,58,.2);
+    --info: #6aaeff; --info-soft: rgba(10,132,255,.22);
+    --series-1: #3987e5; --series-2: #d95926;
+    --shadow: 0 0 0 .5px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1c1c1e; --surface: #2c2c2e; --surface-2: #363638; --ink: #f5f5f7; --muted: #a1a1a8; --line: rgba(255,255,255,.11); --grid: rgba(255,255,255,.08);
+  --accent: #0a84ff; --accent-soft: rgba(10,132,255,.22);
+  --side-bg: rgba(44,44,46,.74); --side-ink: #f5f5f7; --side-muted: #a1a1a8; --side-hover: rgba(255,255,255,.07); --side-line: rgba(255,255,255,.1);
+  --sun-soft: rgba(255,159,10,.2);
+  --ok: #32d74b; --ok-soft: rgba(48,209,88,.18); --warn: #ffb340; --warn-soft: rgba(255,159,10,.18); --bad: #ff6961; --bad-soft: rgba(255,69,58,.2);
+  --info: #6aaeff; --info-soft: rgba(10,132,255,.22);
+  --series-1: #3987e5; --series-2: #d95926;
+  --shadow: 0 0 0 .5px rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.015em; }
+h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -.022em; }
+h2 { font-size: 1.05rem; font-weight: 600; }
+h3 { font-size: .95rem; font-weight: 600; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-soft); }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--f-mono); font-size: .76rem; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+
+.app { display: grid; grid-template-columns: 244px 1fr; min-height: 100%; }
+.side {
+  color: var(--side-ink); background: var(--side-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+  border-right: 1px solid var(--side-line);
+  padding: 14px 12px 18px; display: flex; flex-direction: column; gap: 18px;
+  position: sticky; top: 0; height: 100vh;
+}
+.lights { display: flex; gap: 8px; padding: 2px 8px 4px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.2); }
+.lights i:nth-child(1) { background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; }
+.lights i:nth-child(3) { background: #28c840; }
+.brand { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
+.brand-mark { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(160deg, #ffcf47, #f58a00); display: grid; place-items: center; flex: none; box-shadow: 0 2px 8px rgba(245,138,0,.35), inset 0 0 0 .5px rgba(0,0,0,.15); }
+.brand-name { font-weight: 700; font-size: 1rem; color: var(--side-ink); line-height: 1.15; letter-spacing: -.01em; }
+.brand-sub { font-size: .76rem; color: var(--side-muted); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px;
+  color: var(--side-ink); text-decoration: none; font-weight: 500; font-size: .93rem;
+}
+.nav a svg { width: 18px; height: 18px; flex: none; color: var(--accent); }
+.nav a:hover { background: var(--side-hover); }
+.nav a.on { background: var(--accent); color: #fff; }
+.nav a.on svg { color: #fff; }
+.nav .cta { margin-top: 12px; background: var(--surface); font-weight: 600; box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 1px 2px rgba(0,0,0,.1); }
+.nav .cta:hover { background: var(--surface); filter: brightness(.98); }
+.nav .cta.on { background: var(--accent); color: #fff; }
+.side-foot { margin-top: auto; font-size: .78rem; color: var(--side-muted); padding: 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.side-foot button { background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-weight: 500; }
+.side-foot button:hover { filter: brightness(.97); }
+
+.main { min-width: 0; padding-block: 28px 64px; padding-left: max(30px, env(safe-area-inset-left, 0px)); padding-right: max(30px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.head p { color: var(--muted); margin-top: 4px; }
+.demo-pill { display: inline-block; font-family: var(--f-body); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: var(--sun-soft); color: var(--warn); padding: 3px 9px; border-radius: 99px; vertical-align: middle; margin-left: 10px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; box-shadow: 0 .5px 1.5px rgba(0,0,0,.14); }
+.btn:hover { filter: brightness(.97); }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 600; box-shadow: 0 .5px 1.5px rgba(0,0,0,.25); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.dark { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
+.btn.ghost:hover { color: var(--ink); background: var(--surface-2); filter: none; }
+.btn.sm { padding: 4px 11px; font-size: .85rem; border-radius: 7px; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; filter: none; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+a.link { color: var(--info); font-weight: 500; text-decoration: none; font-size: .88rem; }
+a.link:hover { text-decoration: underline; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+.card-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.card-h .sub { color: var(--muted); font-size: .85rem; font-weight: 400; display: block; margin-top: 1px; font-family: var(--f-body); letter-spacing: 0; }
+.card-b { padding: 18px 20px; }
+.grid2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
+.grid2.even { grid-template-columns: 1fr 1fr; }
+.grid2 > * { min-width: 0; }
+
+.ico { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; flex: none; background: #8e8e93; color: #fff; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.12); }
+.ico svg { width: 18px; height: 18px; }
+.ico.ok { background: linear-gradient(180deg, #4cd964, #2fb457); }
+.ico.warn, .ico.sun { background: linear-gradient(180deg, #ffb13b, #ff9500); }
+.ico.bad { background: linear-gradient(180deg, #ff6259, #f0372d); }
+.ico.info { background: linear-gradient(180deg, #3d9bff, #0a6cf0); }
+.ico.plain { background: linear-gradient(180deg, #a5a5ab, #86868b); }
+
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.kpi { padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.kpi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.kpi .lbl { font-size: .84rem; color: var(--muted); font-weight: 500; }
+.kpi-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.kpi .val { font-family: var(--f-display); font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1.15; }
+.kpi .sub { font-size: .84rem; color: var(--muted); }
+.kpi.alert .val { color: var(--bad); }
+.spark { flex: none; display: block; }
+a.kpi { color: inherit; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+a.kpi:hover { transform: translateY(-2px); }
+.delta { font-size: .78rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.delta.up { background: var(--ok-soft); color: var(--ok); }
+.delta.down { background: var(--bad-soft); color: var(--bad); }
+
+.ins-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.ins { padding: 16px 18px; display: flex; gap: 13px; align-items: flex-start; }
+.ins > * { min-width: 0; }
+.ins-b { display: flex; flex-direction: column; gap: 4px; }
+.ins-b p { font-size: .88rem; color: var(--muted); }
+.ins-b a.link { margin-top: 3px; }
+.sec-title { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: -6px; }
+.sec-title p { color: var(--muted); font-size: .88rem; }
+
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 99px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--info-soft); color: var(--info); }
+.pill.plain { background: var(--surface-2); color: var(--muted); }
+
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: .78rem; color: var(--muted); font-weight: 600; padding: 11px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--surface-2); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+tbody tr.click { cursor: pointer; }
+tbody tr.click:hover td { background: var(--surface-2); }
+.pname { font-weight: 600; }
+
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.search { flex: 1 1 240px; min-width: 0; padding: 9px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 1px 2px rgba(14,26,51,.04); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 5px 13px; cursor: pointer; font-size: .88rem; font-weight: 500; }
+.chip:hover { border-color: var(--muted); }
+.chip.on { background: var(--accent); color: #fff; border-color: transparent; }
+
+.list { display: flex; flex-direction: column; }
+.li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+.li.click { cursor: pointer; }
+.li.click:hover { background: var(--surface-2); }
+.li:last-child { border-bottom: 0; }
+.li .grow { flex: 1; min-width: 0; }
+.big-n { font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+.big-n.zero { color: var(--bad); }
+
+.kits { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; align-items: start; }
+.kit-top { padding: 18px 20px; display: flex; gap: 14px; align-items: flex-start; }
+.kit-top .grow { flex: 1; min-width: 0; }
+.can { text-align: center; padding: 8px 14px; border-radius: 12px; background: var(--surface-2); }
+.can .n { font-family: var(--f-display); font-weight: 800; font-size: 1.7rem; line-height: 1; }
+.can .t { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.can.zero .n { color: var(--bad); }
+.kit-items { border-top: 1px solid var(--line); }
+.kit-items .row { display: grid; grid-template-columns: 1fr 74px 70px 28px; gap: 8px; align-items: center; padding: 8px 20px; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.kit-items .row > * { min-width: 0; }
+.kit-items .row:last-child { border-bottom: 0; }
+.kit-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.qty-in { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); text-align: right; font-variant-numeric: tabular-nums; }
+.x { border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 8px; padding: 3px; display: grid; place-items: center; }
+.x:hover { color: var(--bad); background: var(--bad-soft); }
+.bneck { font-size: .82rem; color: var(--bad); }
+
+.steps { display: flex; gap: 6px; flex-wrap: wrap; font-size: .85rem; }
+.steps span { padding: 4px 11px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.steps b { color: var(--ink); }
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.form-grid > * { min-width: 0; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; font-weight: 600; color: var(--muted); }
+label.f input, label.f select, label.f textarea { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 400; color: var(--ink); font-size: .95rem; width: 100%; }
+.kit-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.kp { text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 13px; padding: 13px 15px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.kp:hover { border-color: var(--muted); }
+.kp.on { border-color: var(--accent); background: var(--accent-soft); }
+.kp b { font-family: var(--f-display); font-size: .98rem; }
+.lines td { padding: 9px 14px; }
+.lines select { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); max-width: 100%; width: 100%; min-width: 180px; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.stepper button { border: 0; background: var(--surface-2); width: 30px; height: 32px; cursor: pointer; font-weight: 700; font-size: 1rem; }
+.stepper button:hover { background: var(--line); }
+.stepper input { width: 52px; border: 0; text-align: center; height: 32px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.summary { position: sticky; top: 16px; }
+.sum-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; }
+.sum-row.total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 12px; font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; }
+.size-tag { display: flex; align-items: baseline; gap: 6px; font-family: var(--f-display); }
+.size-tag .n { font-size: 2.3rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.check-box { border-radius: 12px; padding: 12px 14px; font-size: .9rem; display: flex; flex-direction: column; gap: 4px; }
+.check-box.ok { background: var(--ok-soft); color: var(--ok); }
+.check-box.bad { background: var(--bad-soft); color: var(--bad); }
+.check-box b { font-weight: 700; }
+.addline { display: flex; gap: 8px; padding: 14px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.addline select { flex: 1 1 240px; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+
+.pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.pipe button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 14px 16px; cursor: pointer; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+.pipe button.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.pipe .n { font-family: var(--f-display); font-weight: 800; font-size: 1.6rem; }
+.pipe .t { font-size: .84rem; color: var(--muted); font-weight: 500; }
+.order { padding: 16px 20px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center; }
+.order:last-child { border-bottom: 0; }
+.order .meta { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: .87rem; color: var(--muted); }
+.order .who { font-weight: 700; font-size: 1.02rem; }
+
+/* Charts */
+.chart { overflow-x: auto; padding: 4px 0 0; }
+.chart svg { display: block; width: 100%; min-width: 440px; height: auto; overflow: visible; }
+.gl { stroke: var(--grid); stroke-width: 1; }
+.ax { fill: var(--muted); font-size: 11px; font-family: var(--f-body); }
+.ax.st { fill: var(--ink); font-weight: 700; }
+.vl { fill: var(--ink); font-size: 11px; font-weight: 700; font-family: var(--f-body); font-variant-numeric: tabular-nums; }
+.col .h { fill: transparent; cursor: crosshair; }
+.col:hover .h, .col:focus-within .h { fill: var(--surface-2); }
+.col .xh, .col .hd { opacity: 0; }
+.col:hover .xh, .col:focus-within .xh, .col:hover .hd, .col:focus-within .hd { opacity: 1; }
+.xh { stroke: var(--muted); stroke-dasharray: 3 3; }
+.legend { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.lg { display: inline-flex; align-items: center; gap: 7px; }
+.lg i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex: none; }
+.dn { font-family: var(--f-display); font-weight: 800; font-size: 26px; fill: var(--ink); }
+.dl { font-size: 10px; fill: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.health { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+.health svg { width: 160px; height: 160px; flex: none; }
+.health .legend { flex-direction: column; gap: 12px; flex: 1; min-width: 150px; font-size: .92rem; color: var(--ink); }
+.health .lg { justify-content: space-between; width: 100%; gap: 10px; }
+.health .lg span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+.hb { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; min-width: 40px; }
+.hb i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.hrow { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 92px; gap: 12px; align-items: center; padding: 8px 20px; font-size: .9rem; }
+.hrow.h-link { cursor: pointer; }
+.hrow.h-link:hover { background: var(--surface-2); }
+.hrow .nm { min-width: 0; overflow-wrap: anywhere; }
+.hrow .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.hrow.k2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 118px; }
+.tv { margin-top: 12px; }
+.tv summary { cursor: pointer; color: var(--muted); font-size: .85rem; width: fit-content; }
+.tv .tbl-wrap { margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; }
+textarea.export { width: 100%; min-height: 220px; font-family: var(--f-mono); font-size: .76rem; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink); resize: vertical; }
+.tip { position: fixed; z-index: 80; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px; box-shadow: 0 10px 32px rgba(0,0,0,.2); font-size: .85rem; min-width: 150px; max-width: 280px; display: flex; flex-direction: column; gap: 5px; }
+.tip b { font-family: var(--f-display); font-size: .88rem; }
+.tip .tr { display: flex; align-items: center; gap: 8px; }
+.tip .k { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+.tip .tl { color: var(--muted); flex: 1; }
+.tip .tvl { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Modal + toast */
+.scrim { position: fixed; inset: 0; background: rgba(8,14,26,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal { background: var(--surface); border-radius: 14px; width: min(560px, 100%); max-height: calc(100% - 32px); overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+.modal.wide { width: min(760px, 100%); }
+.modal-h { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.modal-b { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.modal-f { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 12px; font-weight: 500; z-index: 90; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+.empty { padding: 30px 18px; text-align: center; color: var(--muted); }
+.note { font-size: .85rem; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+
+@media (max-width: 1000px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .grid2, .grid2.even { grid-template-columns: 1fr; }
+  .summary { position: static; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .side { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 40; flex-direction: row; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); gap: 0; border-right: 0; border-top: 1px solid var(--side-line); }
+  .brand, .side-foot, .lights { display: none; }
+  .nav { flex-direction: row; width: 100%; justify-content: space-between; }
+  .nav a { flex-direction: column; gap: 2px; font-size: .66rem; padding: 6px 4px; flex: 1; text-align: center; color: var(--side-muted); }
+  .nav a.on { background: transparent; color: var(--accent); }
+  .nav a.on svg { color: var(--accent); }
+  .nav .cta { margin-top: 0; box-shadow: none; background: transparent; }
+  .nav .cta.on { background: transparent; color: var(--accent); }
+  .main { padding-block: 18px 100px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .form-grid { grid-template-columns: 1fr; }
+  .pipe { grid-template-columns: repeat(2, 1fr); }
+  .kits { grid-template-columns: 1fr; }
+  .order { grid-template-columns: 1fr; }
+  .hrow, .hrow.k2 { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .hrow .hb { grid-column: 1 / -1; order: 3; }
+  .mob-reset { display: inline-flex !important; }
+}
+@media (max-width: 560px) {
+  .kpi { padding: 14px; }
+  .kpi .val { font-size: 1.3rem; }
+  .kpi .spark { display: none; }
+  .kpi .delta { font-size: .72rem; }
+}
+.mob-reset { display: none !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: up .25s ease-out; }
+  @keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } }
+}
+@media (prefers-reduced-motion: reduce) { a.kpi { transition: none; } a.kpi:hover { transform: none; } }
+
+.col .mk, .col text { pointer-events: none; }
+.col .h:focus { outline: none; }
+.col .h:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seg { cursor: default; }
+.seg:hover { opacity: .85; }
+.tip[hidden] { display: none; }
+
+.searchbar { position: relative; display: flex; }
+.searchbar .si { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); display: grid; pointer-events: none; }
+.searchbar .si svg { width: 18px; height: 18px; }
+.searchbar .search { width: 100%; padding: 12px 46px 12px 42px; font-size: 1rem; }
+.kbd { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-family: var(--f-mono); font-size: .72rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 0 7px; color: var(--muted); background: var(--surface-2); pointer-events: none; }
+.search:not(:placeholder-shown) ~ .kbd { display: none; }
+.filters { overflow: hidden; }
+.filters.flat { box-shadow: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-bottom: 12px; }
+.fsum { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--line); min-height: 52px; }
+.ftoggle { display: none; }
+.afil { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.afi { display: inline-flex; align-items: center; gap: 5px; border: 0; border-radius: 99px; padding: 3px 7px 3px 11px; background: var(--accent-soft); color: var(--info); font-weight: 600; font-size: .84rem; cursor: pointer; }
+.afi svg { width: 13px; height: 13px; }
+.afi:hover { background: var(--accent); color: #fff; }
+.frows { display: flex; flex-direction: column; }
+.frow { display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding: 10px 16px; align-items: start; border-bottom: 1px solid var(--line); }
+.frow:last-child { border-bottom: 0; }
+.fl { font-size: .8rem; font-weight: 600; color: var(--muted); padding-top: 6px; }
+.chip .cnt { opacity: .6; font-size: .8em; margin-left: 3px; font-variant-numeric: tabular-nums; }
+.chip.on .cnt { opacity: .85; }
+.chip.dim { opacity: .45; }
+.chip.more { border-style: dashed; color: var(--muted); }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+.dot.ok { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+.dot.bad { background: var(--bad); }
+mark { background: var(--sun-soft); color: inherit; border-radius: 3px; padding: 0 1px; }
+.sortl { display: inline-flex; align-items: center; gap: 8px; }
+.sortl select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.pk-list { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; }
+.pk-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.pk-row:last-child { border-bottom: 0; }
+.pk-row .grow { flex: 1; min-width: 0; }
+@media (max-width: 760px) {
+  .ftoggle { display: inline-flex; }
+  .filters:not(.open) .frows { display: none; }
+  .frow { grid-template-columns: 1fr; gap: 4px; }
+  .fl { padding-top: 0; }
+  .kbd { display: none; }
+  .searchbar .search { padding-right: 14px; }
+}
+
+/* =====================================================================
+   macOS theme layer: grouped sidebar, translucent toolbar, push buttons,
+   pop-up menus, segmented controls, sheets and notification banners.
+   ===================================================================== */
+:root {
+  --bg: #f5f5f7; --surface: #ffffff; --surface-2: #f7f7f9; --line: rgba(0,0,0,.08);
+  --fill: rgba(118,118,128,.12); --fill-2: rgba(118,118,128,.07);
+  --bar: rgba(246,246,248,.76); --btn: #ffffff; --seg-thumb: #ffffff; --notif: rgba(250,250,252,.84); --stripe: rgba(0,0,0,.022);
+  --side-bg: rgba(231,231,237,.74);
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14' fill='none' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5l3-3 3 3M2 8.5l3 3 3-3'/%3E%3C/svg%3E");
+  --pad: max(30px, env(safe-area-inset-left, 0px));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1e1e1e; --surface: #2a2a2c; --surface-2: #333335; --line: rgba(255,255,255,.09);
+    --fill: rgba(120,120,128,.3); --fill-2: rgba(120,120,128,.16);
+    --bar: rgba(30,30,30,.74); --btn: rgba(255,255,255,.14); --seg-thumb: #636366; --notif: rgba(52,52,54,.84); --stripe: rgba(255,255,255,.028);
+    --side-bg: rgba(38,38,40,.74);
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14' fill='none' stroke='%23a1a1a8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5l3-3 3 3M2 8.5l3 3 3-3'/%3E%3C/svg%3E");
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1e1e1e; --surface: #2a2a2c; --surface-2: #333335; --line: rgba(255,255,255,.09);
+  --fill: rgba(120,120,128,.3); --fill-2: rgba(120,120,128,.16);
+  --bar: rgba(30,30,30,.74); --btn: rgba(255,255,255,.14); --seg-thumb: #636366; --notif: rgba(52,52,54,.84); --stripe: rgba(255,255,255,.028);
+  --side-bg: rgba(38,38,40,.74);
+  --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14' fill='none' stroke='%23a1a1a8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5.5l3-3 3 3M2 8.5l3 3 3-3'/%3E%3C/svg%3E");
+}
+body { font-size: 14px; text-rendering: optimizeLegibility; }
+* { scrollbar-width: thin; scrollbar-color: rgba(128,128,128,.45) transparent; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-thumb { background: rgba(128,128,128,.42); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.nav a svg, .ico svg, .brand svg, .kit-pick svg { stroke-width: 1.7; }
+
+/* Sidebar */
+.app { grid-template-columns: 232px 1fr; }
+.side { padding: 14px 10px 14px; gap: 6px; }
+.brand { padding: 4px 8px 10px; }
+.nav { gap: 1px; }
+.nav .grp { font-size: .7rem; font-weight: 600; color: var(--side-muted); padding: 16px 10px 4px; letter-spacing: .01em; }
+.nav a { padding: 5px 10px; border-radius: 6px; font-size: .93rem; gap: 9px; }
+.nav a svg { width: 17px; height: 17px; }
+.nav .cta { margin-top: 0; background: transparent; box-shadow: none; font-weight: 500; }
+.nav .cta:hover { background: var(--side-hover); filter: none; }
+.nav .cta.on { background: var(--accent); }
+.side-foot { padding: 0 10px; }
+
+/* Toolbar: the page header becomes a translucent window toolbar */
+.main { padding-top: 0; padding-bottom: 64px; padding-left: var(--pad); padding-right: var(--pad); }
+#bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; margin: 0 calc(-1 * var(--pad)) 22px; padding: 10px var(--pad); background: var(--bar);
+  -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px); border-bottom: 1px solid var(--line); min-height: 56px; display: flex; align-items: center; }
+#bar:empty { display: none; }
+#bar .head { width: 100%; max-width: 1200px; margin: 0 auto; align-items: center; flex-wrap: nowrap; gap: 12px; }
+#bar .head > div:first-child { min-width: 0; }
+#bar .head h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+#bar .head p { margin: 1px 0 0; font-size: .8rem; line-height: 1.3; }
+#bar .head .btns, #bar .head .steps { flex: none; }
+#bar .steps { display: none; }
+.demo-pill { font-size: .62rem; padding: 2px 8px; margin-left: 8px; vertical-align: 3px; }
+.wrap { gap: 20px; }
+
+/* Controls */
+.btn { border: 0; border-radius: 6px; padding: 3px 12px; min-height: 28px; background: var(--btn); font-size: .93rem; font-weight: 500;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 .5px 1.5px rgba(0,0,0,.14); }
+:root[data-theme="dark"] .btn { box-shadow: 0 0 0 .5px rgba(255,255,255,.08), 0 .5px 1.5px rgba(0,0,0,.3); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn { box-shadow: 0 0 0 .5px rgba(255,255,255,.08), 0 .5px 1.5px rgba(0,0,0,.3); } }
+.btn:hover { filter: none; background: color-mix(in srgb, var(--btn) 94%, #808080); }
+.btn:active { filter: brightness(.94); }
+.btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 84%, #fff), var(--accent)); color: #fff; font-weight: 500;
+  box-shadow: 0 0 0 .5px rgba(0,40,120,.45), 0 .5px 1.5px rgba(0,0,0,.2), inset 0 .5px 0 rgba(255,255,255,.3); }
+.btn.primary:hover { filter: brightness(1.06); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 84%, #fff), var(--accent)); }
+.btn.dark { background: var(--ink); color: var(--bg); box-shadow: none; }
+.btn.ghost { background: transparent; box-shadow: none; color: var(--muted); }
+.btn.ghost:hover { background: var(--fill-2); }
+.btn.sm { min-height: 24px; padding: 1px 10px; font-size: .85rem; border-radius: 5px; }
+.btn[disabled] { opacity: .4; }
+.btns { gap: 8px; }
+select { -webkit-appearance: none; appearance: none; background-color: var(--btn); background-image: var(--chev) !important; background-repeat: no-repeat !important; background-position: right 8px center !important;
+  padding-right: 26px !important; border: 0 !important; border-radius: 6px !important; box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 .5px 1.5px rgba(0,0,0,.12); cursor: pointer; color: var(--ink); }
+:root[data-theme="dark"] select { box-shadow: 0 0 0 .5px rgba(255,255,255,.1); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) select { box-shadow: 0 0 0 .5px rgba(255,255,255,.1); } }
+label.f input, label.f textarea, .qty-in, .stepper { border-radius: 6px; border-color: var(--line); background: var(--surface); box-shadow: inset 0 .5px 1px rgba(0,0,0,.06); }
+label.f input, label.f select { padding: 6px 10px; font-size: .93rem; }
+:root[data-theme="dark"] label.f input, :root[data-theme="dark"] .qty-in { background: var(--fill-2); }
+.search { background: var(--fill) !important; border: 0 !important; border-radius: 8px; box-shadow: none !important; }
+.search:focus { background: var(--surface) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 0 .5px var(--accent) !important; }
+.searchbar .search { padding: 8px 40px 8px 38px; font-size: .95rem; }
+.searchbar .si { left: 11px; }
+.chip { border: 0; border-radius: 6px; padding: 3px 10px; background: var(--fill); font-weight: 500; font-size: .86rem; color: var(--ink); }
+.chip:hover { background: color-mix(in srgb, var(--fill) 70%, var(--ink) 8%); }
+.chip.on { background: var(--accent); color: #fff; }
+.chip.more { background: transparent; box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+.chips.seg { justify-self: start; width: fit-content; display: inline-flex; flex-wrap: nowrap; gap: 0; background: var(--fill); padding: 2px; border-radius: 8px; max-width: 100%; overflow-x: auto; }
+.chips.seg .chip { background: transparent; border-radius: 6px; padding: 3px 12px; white-space: nowrap; }
+.chips.seg .chip:hover { background: transparent; }
+.chips.seg .chip.on { background: var(--seg-thumb); color: var(--ink); box-shadow: 0 0 0 .5px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.18); }
+.chips.seg .chip.dim { opacity: .5; }
+.afi { border-radius: 6px; padding: 2px 6px 2px 10px; }
+
+/* Grouped content */
+.card { border: 0; border-radius: 10px; box-shadow: 0 0 0 .5px var(--line), 0 1px 2px rgba(0,0,0,.04); }
+.filters.flat { border: 0; border-radius: 10px; box-shadow: 0 0 0 .5px var(--line); }
+.card-h { padding: 12px 16px; }
+.card-h h2, .sec-title h2 { font-size: .98rem; font-weight: 600; }
+.card-b { padding: 14px 16px; }
+.sec-title h2 { font-size: 1.05rem; }
+th { padding: 7px 14px; font-size: .75rem; background: transparent; border-bottom: 1px solid var(--line); }
+td { padding: 9px 14px; border-bottom: 1px solid var(--line); }
+.tbl-wrap tbody tr:nth-child(even) td { background: var(--stripe); }
+tbody tr.click:hover td { background: var(--fill-2) !important; }
+.li { padding: 10px 16px; }
+.hrow { padding: 7px 16px; }
+.hrow.h-link:hover { background: var(--fill-2); }
+.li.click:hover { background: var(--fill-2); }
+.pill { font-size: .75rem; padding: 1px 9px; }
+.ico { width: 30px; height: 30px; border-radius: 7px; }
+.ico svg { width: 17px; height: 17px; }
+.ico.sm { width: 24px; height: 24px; border-radius: 6px; }
+.ico.sm svg { width: 14px; height: 14px; }
+.kpi { padding: 14px 16px; gap: 6px; }
+.kpi-top { margin-bottom: 0; justify-content: flex-start; gap: 8px; }
+.kpi .lbl { flex: 1; min-width: 0; font-size: .85rem; font-weight: 500; }
+.kpi .val { font-size: 1.65rem; }
+a.kpi:hover { transform: none; filter: brightness(.985); }
+.ins { padding: 14px 16px; gap: 12px; }
+.kit-top, .kit-foot { padding-left: 16px; padding-right: 16px; }
+.kit-items .row { padding: 7px 16px; }
+.pipe button, .kp { border-radius: 10px; box-shadow: 0 0 0 .5px var(--line); border: 0; }
+.kp.on, .pipe button.on { box-shadow: 0 0 0 2px var(--accent); background: var(--accent-soft); }
+.stepper button { background: var(--fill); }
+.order { padding: 12px 16px; }
+
+/* Sheets (dialogs) */
+.scrim { background: rgba(0,0,0,.28); -webkit-backdrop-filter: none; backdrop-filter: none; place-items: start center; padding-top: min(9vh, 80px); }
+.modal { border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 22px 60px rgba(0,0,0,.32); }
+.modal-h { border-bottom: 0; padding: 18px 22px 0; }
+.modal-h h2 { font-size: 1.05rem; font-weight: 700; }
+.modal-h .x { width: 22px; height: 22px; border-radius: 50%; background: var(--fill); }
+.modal-b { padding: 14px 22px 16px; }
+.modal-f { border-top: 0; padding: 0 22px 18px; }
+@media (prefers-reduced-motion: no-preference) {
+  .modal { animation: sheet .3s cubic-bezier(.2,.9,.25,1); }
+  @keyframes sheet { from { opacity: 0; transform: translateY(-16px) scale(.985); } }
+}
+
+/* Notification banner */
+.toast { left: auto; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); bottom: auto; transform: none; width: min(340px, calc(100% - 32px)); display: flex; align-items: center; gap: 11px;
+  background: var(--notif); color: var(--ink); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+  padding: 10px 14px; border-radius: 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 12px 32px rgba(0,0,0,.2); }
+.toast .ti { width: 32px; height: 32px; border-radius: 8px; flex: none; background: linear-gradient(160deg, #ffcf47, #f58a00); box-shadow: inset 0 0 0 .5px rgba(0,0,0,.15); }
+.toast b { display: block; font-size: .78rem; font-weight: 600; }
+.toast span.tm { display: block; font-size: .86rem; color: var(--muted); line-height: 1.35; }
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: banner .35s cubic-bezier(.2,.9,.25,1); }
+  @keyframes banner { from { opacity: 0; transform: translateX(28px); } }
+}
+
+/* Popovers */
+.tip { background: var(--notif); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border: 0; border-radius: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 10px 30px rgba(0,0,0,.18); padding: 9px 12px; }
+.tip b { font-family: var(--f-body); font-weight: 600; font-size: .82rem; }
+
+@media (max-width: 760px) {
+  :root { --pad: max(16px, env(safe-area-inset-left, 0px)); }
+  .main { padding-top: 0; padding-bottom: 100px; }
+  .side { padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+  .nav .grp { display: none; }
+  .nav a { border-radius: 8px; }
+  #bar .head { flex-wrap: wrap; }
+  #bar .head p { display: none; }
+  #bar .head h1 { font-size: 1.15rem; }
+  #bar { min-height: 48px; }
+  .toast { right: 16px; left: 16px; width: auto; }
+  .app { grid-template-columns: 1fr; }
+  .nav a { padding: 5px 2px; font-size: .62rem; min-width: 0; overflow: hidden; line-height: 1.2; }
+  .nav a svg { width: 21px; height: 21px; }
+}
+@media (max-width: 560px) {
+  .kpi .ico.sm { display: none; }
+  .kpi .lbl { font-size: .8rem; }
+  #bar .head .btns .btn:not(.primary) { display: none; }
+}
+
+/* Live notifications */
+.tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.bell { position: relative; width: 32px; padding: 0; color: var(--ink); }
+.bell svg { width: 17px; height: 17px; stroke-width: 1.7; }
+.bdg { position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #ff3b30; color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--bg); font-variant-numeric: tabular-nums; }
+.bdg[hidden] { display: none; }
+#notif .np { position: fixed; top: calc(58px + env(safe-area-inset-top, 0px)); right: 14px; width: min(392px, calc(100% - 28px)); max-height: min(640px, calc(100% - 80px)); display: flex; flex-direction: column; z-index: 45;
+  background: var(--notif); -webkit-backdrop-filter: saturate(180%) blur(28px); backdrop-filter: saturate(180%) blur(28px); border-radius: 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.2), 0 18px 50px rgba(0,0,0,.28); overflow: hidden; }
+.np-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 12px 8px 16px; }
+.np-h b { font-size: 1.02rem; font-weight: 700; }
+.np-t { display: flex; gap: 2px; }
+.np-t .btn svg { width: 15px; height: 15px; stroke-width: 1.7; }
+.np-sp { width: 56px; }
+.nseg { padding: 0 16px 8px; }
+.nlist { overflow-y: auto; padding: 0 8px 8px; }
+.ngrp { font-size: .72rem; font-weight: 600; color: var(--muted); padding: 10px 10px 4px; }
+.ni { display: flex; gap: 11px; align-items: flex-start; padding: 9px 10px 9px 18px; border-radius: 9px; cursor: pointer; position: relative; }
+.ni:hover { background: var(--fill-2); }
+.ni.unread::before { content: ""; position: absolute; left: 6px; top: 20px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.ni .grow { flex: 1; min-width: 0; }
+.nt { font-size: .88rem; font-weight: 600; line-height: 1.3; }
+.ni:not(.unread) .nt { font-weight: 500; }
+.nx { font-size: .82rem; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+.nm { font-size: .72rem; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+.nrow { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.nrow:last-child { border-bottom: 0; }
+.nrow small { display: block; color: var(--muted); font-size: .78rem; margin-top: 1px; }
+.nrow b { font-weight: 600; font-size: .9rem; }
+.nfoot { padding: 10px 16px 14px; }
+.sw { position: relative; width: 38px; height: 22px; flex: none; }
+.sw input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.sw span { position: absolute; inset: 0; border-radius: 99px; background: var(--fill); transition: background .2s; }
+.sw span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.sw input:checked + span { background: #34c759; }
+.sw input:checked + span::after { transform: translateX(16px); }
+.sw input:focus-visible + span { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.banners { position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); right: 16px; width: min(340px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px; z-index: 90; pointer-events: none; }
+.banners .toast { position: relative; top: auto; right: auto; left: auto; bottom: auto; width: auto; pointer-events: auto; }
+.toast.link { cursor: pointer; }
+.toast .ti.bad { background: linear-gradient(180deg, #ff6259, #f0372d); }
+.toast .ti.warn, .toast .ti.sun { background: linear-gradient(180deg, #ffb13b, #ff9500); }
+.toast .ti.ok { background: linear-gradient(180deg, #4cd964, #2fb457); }
+.toast .ti.info { background: linear-gradient(180deg, #3d9bff, #0a6cf0); }
+.toast .ti.plain { background: linear-gradient(180deg, #a5a5ab, #86868b); }
+.live { display: flex; align-items: center; gap: 7px; font-weight: 600; color: var(--side-ink); }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #34c759; }
+.live.off::before { background: var(--side-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .live:not(.off)::before { animation: pulse 2s ease-out infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,199,89,.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(52,199,89,0); } }
+  .bell.ring svg { animation: ring .7s ease-in-out; transform-origin: 50% 20%; }
+  @keyframes ring { 15% { transform: rotate(14deg); } 30% { transform: rotate(-12deg); } 45% { transform: rotate(8deg); } 60% { transform: rotate(-5deg); } }
+}
+@media (max-width: 760px) {
+  #notif .np { left: 10px; right: 10px; width: auto; top: calc(54px + env(safe-area-inset-top, 0px)); }
+  .banners { left: 16px; width: auto; }
+}
+
+.print-only { display: none; }
+.glist { display: flex; flex-direction: column; gap: 4px; }
+.gitem { display: flex; align-items: flex-start; gap: 12px; text-align: left; border: 0; background: var(--fill-2); border-radius: 9px; padding: 9px 12px; cursor: pointer; }
+.gitem:hover { background: var(--fill); }
+.gitem b { display: block; font-weight: 600; }
+.gitem small { display: block; color: var(--muted); font-size: .82rem; line-height: 1.35; margin-top: 1px; }
+.gn { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: .75rem; font-weight: 700; display: grid; place-items: center; flex: none; margin-top: 1px; }
+@media print {
+  .app, #bar, #notif, .banners, .modal-f, .modal-h .x { display: none !important; }
+  body { background: #fff; color: #000; }
+  .scrim { position: static; background: none; padding: 0; display: block; }
+  .modal { box-shadow: none; width: 100%; max-height: none; overflow: visible; border-radius: 0; background: #fff; }
+  .print-only { display: block; margin-bottom: 8px; }
+  .modal-h { display: none; }
+  .tbl-wrap tbody tr:nth-child(even) td { background: none; }
+}
+
+</style>
+</head>
+<body>
+<noscript>This demo needs JavaScript. Please enable it and reload.</noscript>
+<div class="app">
+  <aside class="side">
+    <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="brand">
+      <div class="brand-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a1a00" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="#2a1a00"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg></div>
+      <div><div class="brand-name">Saurasakti</div><div class="brand-sub">Stock Manager</div></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <span class="live" id="live"></span><span>Demo with sample data. Changes are kept in this browser only.</span>
+      <button type="button" data-act="guide">Demo guide</button><button type="button" data-act="reset">Reset sample data</button>
+    </div>
+  </aside>
+  <main class="main"><div id="bar"></div><div class="wrap" id="view"></div></main>
+</div>
+<div id="layer"></div>
+<div id="notif"></div>
+<div class="banners" id="banners" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  const KEY = 'saurasakti-demo-v4';
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const qn = n => Number(n).toLocaleString('en-IN');
+  const today = new Date();
+  const daysAgo = n => { const d = new Date(today); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+  const fmtDate = s => new Date(s + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+  const CATS = { panel: 'Solar panels', inverter: 'Inverters', battery: 'Batteries', structure: 'Mounting structure', cable: 'Cables', electrical: 'Electrical & safety', meter: 'Meters' };
+  const STATUS = {
+    quote: { label: 'Quotation', cls: 'plain' },
+    reserved: { label: 'Stock reserved', cls: 'info' },
+    dispatched: { label: 'Dispatched', cls: 'warn' },
+    installed: { label: 'Installed', cls: 'ok' }
+  };
+  const ICON = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+    stock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+    kits: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="11" rx="1"/><path d="M3 9.5h18M9 4v11M15 4v11M8 20h8M12 15v5"/></svg>',
+    orders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 12h6M9 16h4"/></svg>',
+    neworder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+    buy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11h11l2-8H6.5"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>',
+    reports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  };
+  const ROUTES = [
+    ['home', 'Home', 'home', ''],
+    ['stock', 'Stock', 'stock', 'Inventory'], ['kits', 'System kits', 'kits', 'Inventory'], ['buy', 'Purchase', 'buy', 'Inventory'],
+    ['new-order', 'New order', 'neworder', 'Sales'], ['orders', 'Orders', 'orders', 'Sales'],
+    ['reports', 'Insights', 'reports', 'Analytics']
+  ];
+
+  /* ---------- Sample data ---------- */
+  function seed() {
+    const parts = [
+      { id: 'p1', sku: 'PNL-WAA-540', name: 'Waaree 540 Wp Mono PERC panel', cat: 'panel', unit: 'pcs', w: 540, stock: 46, min: 20, cost: 13500, price: 15200, pack: 1 },
+      { id: 'p2', sku: 'PNL-ADA-545', name: 'Adani 545 Wp Bifacial panel', cat: 'panel', unit: 'pcs', w: 545, stock: 18, min: 20, cost: 14000, price: 15800, pack: 1 },
+      { id: 'p3', sku: 'PNL-VIK-575', name: 'Vikram 575 Wp TOPCon panel', cat: 'panel', unit: 'pcs', w: 575, stock: 12, min: 10, cost: 15500, price: 17400, pack: 1 },
+      { id: 'p4', sku: 'INV-GRW-3K', name: 'Growatt 3 kW on-grid inverter', cat: 'inverter', unit: 'pcs', stock: 7, min: 3, cost: 26000, price: 31000, pack: 1 },
+      { id: 'p5', sku: 'INV-GRW-5K', name: 'Growatt 5 kW on-grid inverter', cat: 'inverter', unit: 'pcs', stock: 2, min: 3, cost: 38000, price: 45000, pack: 1 },
+      { id: 'p6', sku: 'INV-LUM-3H', name: 'Luminous 3 kVA hybrid inverter', cat: 'inverter', unit: 'pcs', stock: 3, min: 2, cost: 42000, price: 49000, pack: 1 },
+      { id: 'p7', sku: 'INV-PCU-1K', name: '1 kVA off-grid solar PCU', cat: 'inverter', unit: 'pcs', stock: 5, min: 2, cost: 8500, price: 10500, pack: 1 },
+      { id: 'p8', sku: 'BAT-EXI-150', name: 'Exide 150 Ah solar tubular battery', cat: 'battery', unit: 'pcs', stock: 9, min: 8, cost: 13500, price: 15500, pack: 1 },
+      { id: 'p9', sku: 'STR-GI-1KW', name: 'GI mounting structure (1 kW set)', cat: 'structure', unit: 'set', stock: 22, min: 10, cost: 6500, price: 8000, pack: 1 },
+      { id: 'p10', sku: 'STR-AL-1KW', name: 'Aluminium rail structure (1 kW set)', cat: 'structure', unit: 'set', stock: 6, min: 5, cost: 8500, price: 10500, pack: 1 },
+      { id: 'p11', sku: 'CBL-DC-4', name: 'DC solar cable 4 sq mm', cat: 'cable', unit: 'm', stock: 420, min: 200, cost: 55, price: 75, pack: 100 },
+      { id: 'p12', sku: 'CBL-DC-6', name: 'DC solar cable 6 sq mm', cat: 'cable', unit: 'm', stock: 150, min: 150, cost: 85, price: 110, pack: 100 },
+      { id: 'p13', sku: 'CBL-AC-4', name: 'AC cable 4 sq mm, 2-core', cat: 'cable', unit: 'm', stock: 260, min: 150, cost: 95, price: 125, pack: 100 },
+      { id: 'p14', sku: 'ELC-MC4', name: 'MC4 connector pair', cat: 'electrical', unit: 'pair', stock: 64, min: 30, cost: 60, price: 120, pack: 10 },
+      { id: 'p15', sku: 'ELC-ACDB-1P', name: 'ACDB, single phase', cat: 'electrical', unit: 'pcs', stock: 9, min: 5, cost: 2200, price: 3000, pack: 1 },
+      { id: 'p16', sku: 'ELC-DCDB-11', name: 'DCDB, 1 in 1 out', cat: 'electrical', unit: 'pcs', stock: 8, min: 5, cost: 2800, price: 3800, pack: 1 },
+      { id: 'p17', sku: 'ELC-EARTH', name: 'Chemical earthing kit', cat: 'electrical', unit: 'set', stock: 10, min: 12, cost: 1800, price: 2500, pack: 1 },
+      { id: 'p18', sku: 'ELC-LA', name: 'Lightning arrester (copper)', cat: 'electrical', unit: 'pcs', stock: 3, min: 5, cost: 2000, price: 2800, pack: 1 },
+      { id: 'p19', sku: 'ELC-PIPE-25', name: 'PVC conduit pipe 25 mm (3 m)', cat: 'electrical', unit: 'pcs', stock: 85, min: 40, cost: 90, price: 140, pack: 10 },
+      { id: 'p20', sku: 'ELC-TIES', name: 'UV cable ties (pack of 100)', cat: 'electrical', unit: 'pack', stock: 14, min: 5, cost: 120, price: 200, pack: 1 },
+      { id: 'p21', sku: 'MTR-NET-1P', name: 'Net meter, single phase', cat: 'meter', unit: 'pcs', stock: 4, min: 3, cost: 3500, price: 4500, pack: 1 },
+      { id: 'p22', sku: 'PNL-TAT-540', name: 'Tata Power 540 Wp Mono PERC panel', cat: 'panel', unit: 'pcs', w: 540, stock: 24, min: 10, cost: 13800, price: 15500, pack: 1 },
+      { id: 'p23', sku: 'PNL-LOO-440', name: 'Loom Solar 440 Wp Mono panel', cat: 'panel', unit: 'pcs', w: 440, stock: 0, min: 6, cost: 11000, price: 12600, pack: 1 },
+      { id: 'p24', sku: 'PNL-WAA-575', name: 'Waaree 575 Wp TOPCon panel', cat: 'panel', unit: 'pcs', w: 575, stock: 14, min: 8, cost: 15600, price: 17500, pack: 1 },
+      { id: 'p25', sku: 'PNL-ADA-440', name: 'Adani 440 Wp Mono PERC panel', cat: 'panel', unit: 'pcs', w: 440, stock: 30, min: 10, cost: 11200, price: 12800, pack: 1 },
+      { id: 'p26', sku: 'INV-SOL-5K', name: 'Solis 5 kW on-grid inverter', cat: 'inverter', unit: 'pcs', stock: 4, min: 2, cost: 36500, price: 43000, pack: 1 },
+      { id: 'p27', sku: 'INV-SUN-10K', name: 'Sungrow 10 kW on-grid inverter', cat: 'inverter', unit: 'pcs', stock: 1, min: 1, cost: 82000, price: 96000, pack: 1 },
+      { id: 'p28', sku: 'INV-HAV-3K', name: 'Havells 3 kW on-grid inverter', cat: 'inverter', unit: 'pcs', stock: 3, min: 2, cost: 27500, price: 32500, pack: 1 },
+      { id: 'p29', sku: 'INV-LUM-5H', name: 'Luminous 5 kVA hybrid inverter', cat: 'inverter', unit: 'pcs', stock: 0, min: 1, cost: 78000, price: 91000, pack: 1 },
+      { id: 'p30', sku: 'BAT-AMA-150', name: 'Amaron 150 Ah solar tubular battery', cat: 'battery', unit: 'pcs', stock: 6, min: 8, cost: 13200, price: 15000, pack: 1 },
+      { id: 'p31', sku: 'BAT-LUM-200', name: 'Luminous 200 Ah solar battery', cat: 'battery', unit: 'pcs', stock: 5, min: 4, cost: 17800, price: 20500, pack: 1 },
+      { id: 'p32', sku: 'CBL-DC-4H', name: 'DC solar cable 4 sq mm (Havells)', cat: 'cable', unit: 'm', stock: 200, min: 100, cost: 58, price: 78, pack: 100 },
+      { id: 'p33', sku: 'CBL-AC-4K', name: 'AC cable 4 sq mm, 2-core (KEI)', cat: 'cable', unit: 'm', stock: 180, min: 100, cost: 92, price: 120, pack: 100 },
+      { id: 'p34', sku: 'STR-GI-3KW', name: 'GI mounting structure (3 kW set)', cat: 'structure', unit: 'set', stock: 8, min: 4, cost: 18500, price: 22500, pack: 1 },
+      { id: 'p35', sku: 'ELC-ACDB-3P', name: 'ACDB, three phase', cat: 'electrical', unit: 'pcs', stock: 3, min: 2, cost: 4200, price: 5600, pack: 1 },
+      { id: 'p36', sku: 'MTR-NET-3P', name: 'Net meter, three phase', cat: 'meter', unit: 'pcs', stock: 2, min: 2, cost: 7800, price: 9800, pack: 1 }
+    ];
+    const kits = [
+      { id: 'k1', name: '3 kW On-grid home', note: 'Most popular. PM Surya Ghar size.', items: [['p1', 6], ['p4', 1], ['p9', 3], ['p11', 30], ['p13', 20], ['p14', 4], ['p15', 1], ['p16', 1], ['p17', 3], ['p18', 1], ['p19', 10], ['p20', 1]] },
+      { id: 'k2', name: '5 kW On-grid', note: 'Bigger homes, shops.', items: [['p2', 10], ['p5', 1], ['p9', 5], ['p12', 40], ['p13', 25], ['p14', 6], ['p15', 1], ['p16', 1], ['p17', 3], ['p18', 1], ['p19', 15], ['p20', 2]] },
+      { id: 'k3', name: '3 kW Hybrid with battery', note: 'Power backup during cuts.', items: [['p1', 6], ['p6', 1], ['p8', 4], ['p9', 3], ['p11', 30], ['p13', 20], ['p14', 4], ['p15', 1], ['p16', 1], ['p17', 3], ['p18', 1], ['p19', 10], ['p20', 1]] },
+      { id: 'k4', name: '1 kW Off-grid home', note: 'Village homes without steady grid.', items: [['p1', 2], ['p7', 1], ['p8', 2], ['p9', 1], ['p11', 15], ['p13', 10], ['p14', 2], ['p17', 1], ['p19', 5]] }
+    ].map(k => ({ ...k, items: k.items.map(([pid, qty]) => ({ pid, qty })) }));
+    const kitItems = id => kits.find(k => k.id === id).items.map(i => ({ ...i }));
+    const projects = [
+      { id: 'SS-1041', customer: 'Ramesh Panda', phone: '98610 22417', place: 'Patia, Bhubaneswar', kitId: 'k1', items: kitItems('k1'), labour: 18000, status: 'reserved', date: daysAgo(2), returns: [] },
+      { id: 'SS-1042', customer: 'Sunita Mohanty', phone: '94370 55102', place: 'Buxi Bazar, Cuttack', kitId: 'k2', items: kitItems('k2').map(i => i.pid === 'p2' ? { pid: 'p3', qty: 10 } : i), labour: 25000, status: 'quote', date: daysAgo(1), returns: [] },
+      { id: 'SS-1043', customer: 'Sri Jagannath Rice Mill', phone: '93380 81120', place: 'Khordha', kitId: 'k2', items: kitItems('k2').map(i => ({ ...i, qty: i.pid === 'p2' ? 20 : i.pid === 'p5' ? 2 : i.pid === 'p9' ? 10 : i.pid === 'p12' ? 70 : i.qty })), labour: 42000, status: 'quote', date: daysAgo(0), returns: [] },
+      { id: 'SS-1039', customer: 'Biswajit Sahoo', phone: '70083 44961', place: 'Puri', kitId: 'k3', items: kitItems('k3'), labour: 20000, status: 'dispatched', date: daysAgo(5), returns: [] },
+      { id: 'SS-1036', customer: 'Lipika Nayak', phone: '89176 30258', place: 'Jatni', kitId: 'k1', items: kitItems('k1'), labour: 18000, status: 'installed', date: daysAgo(11), returns: [{ pid: 'p11', qty: 6 }] },
+      { id: 'SS-1033', customer: 'Gopal Behera', phone: '96680 17734', place: 'Nimapara', kitId: 'k4', items: kitItems('k4'), labour: 8000, status: 'installed', date: daysAgo(16), returns: [] }
+    ];
+    const moves = [
+      { date: daysAgo(16), pid: 'p1', qty: -2, type: 'out', ref: 'SS-1033 Gopal Behera' },
+      { date: daysAgo(14), pid: 'p1', qty: 40, type: 'in', ref: 'Waaree Energies, Inv WE/2291' },
+      { date: daysAgo(14), pid: 'p11', qty: 300, type: 'in', ref: 'Polycab dealer, Inv PC-884' },
+      { date: daysAgo(11), pid: 'p1', qty: -6, type: 'out', ref: 'SS-1036 Lipika Nayak' },
+      { date: daysAgo(11), pid: 'p4', qty: -1, type: 'out', ref: 'SS-1036 Lipika Nayak' },
+      { date: daysAgo(9), pid: 'p11', qty: 6, type: 'return', ref: 'SS-1036 leftover from site' },
+      { date: daysAgo(7), pid: 'p8', qty: 8, type: 'in', ref: 'Exide distributor, Inv EX-1170' },
+      { date: daysAgo(5), pid: 'p6', qty: -1, type: 'out', ref: 'SS-1039 Biswajit Sahoo' },
+      { date: daysAgo(5), pid: 'p8', qty: -4, type: 'out', ref: 'SS-1039 Biswajit Sahoo' },
+      { date: daysAgo(5), pid: 'p1', qty: -6, type: 'out', ref: 'SS-1039 Biswajit Sahoo' },
+      { date: daysAgo(3), pid: 'p3', qty: 12, type: 'in', ref: 'Vikram Solar, Inv VS/7731' },
+      { date: daysAgo(1), pid: 'p18', qty: -1, type: 'adjust', ref: 'Damaged in godown' }
+    ];
+    const meta = { p1: [14, 3], p2: [8, 8], p3: [4, 3], p4: [4, 10], p5: [3, 12], p6: [1, 5], p7: [1, 74], p8: [6, 7], p9: [5, 6], p10: [1, 68], p11: [120, 2], p12: [40, 15], p13: [100, 9], p14: [30, 11], p15: [5, 7], p16: [5, 7], p17: [5, 21], p18: [5, 1], p19: [40, 14], p20: [6, 30], p21: [3, 45], p22: [6, 10], p23: [3, 20], p24: [3, 5], p25: [5, 12], p26: [2, 9], p27: [1, 30], p28: [2, 14], p29: [1, 40], p30: [3, 6], p31: [2, 10], p32: [40, 12], p33: [50, 8], p34: [2, 16], p35: [1, 22], p36: [1, 35] };
+    const brands = { p1: 'Waaree', p2: 'Adani', p3: 'Vikram', p4: 'Growatt', p5: 'Growatt', p6: 'Luminous', p7: 'Microtek', p8: 'Exide', p9: 'Jindal', p10: 'Hindalco', p11: 'Polycab', p12: 'Polycab', p13: 'Havells', p14: 'Amphenol', p15: 'Elmex', p16: 'Elmex', p17: 'Aeron', p18: 'Aeron', p19: 'Finolex', p20: 'Panduit', p21: 'HPL', p22: 'Tata Power', p23: 'Loom Solar', p24: 'Waaree', p25: 'Adani', p26: 'Solis', p27: 'Sungrow', p28: 'Havells', p29: 'Luminous', p30: 'Amaron', p31: 'Luminous', p32: 'Havells', p33: 'KEI', p34: 'Jindal', p35: 'Havells', p36: 'HPL' };
+    parts.forEach(p => { p.pm = meta[p.id][0]; p.idle = meta[p.id][1]; p.brand = brands[p.id]; });
+    const hist = [
+      { rev: 380000, margin: 56000, kw: 9.4, n: 3, buy: 620000, sv: 2780000 },
+      { rev: 520000, margin: 78000, kw: 13.1, n: 4, buy: 790000, sv: 3050000 },
+      { rev: 460000, margin: 69000, kw: 10.2, n: 3, buy: 580000, sv: 2890000 },
+      { rev: 610000, margin: 93000, kw: 16.2, n: 5, buy: 920000, sv: 3300000 },
+      { rev: 520000, margin: 79000, kw: 12.8, n: 4, buy: 740000, sv: 3230000 }
+    ];
+    const now = Date.now(), M = 60000;
+    const notes = [
+      { type: 'out', title: 'Loom Solar 440 Wp Mono panel is out of stock', text: '0 pcs free · minimum 6. Add it to the purchase list.', href: '#buy', ago: 4 * M, read: false },
+      { type: 'order', title: 'Sri Jagannath Rice Mill is waiting on stock', text: '₹5,59,145 quotation SS-1043 needs 2 more Adani 545 Wp panels.', href: '#buy', ago: 27 * M, read: false },
+      { type: 'low', title: 'Growatt 5 kW on-grid inverter is running low', text: '2 pcs free · minimum 3. Add it to the purchase list.', href: '#buy', ago: 100 * M, read: false },
+      { type: 'stock', title: 'Godown received 12 × Vikram 575 Wp TOPCon panel', text: 'Vikram Solar, Inv VS/7731', href: '#stock', ago: 3 * 1440 * M, read: true },
+      { type: 'done', title: 'Lipika Nayak system installed', text: 'SS-1036 · 3.24 kWp at Jatni. Site team marked it complete.', href: '#orders', ago: 1440 * M, read: true }
+    ].map((n, i) => ({ id: 'n-seed' + i, ts: now - n.ago, type: n.type, title: n.title, text: n.text, href: n.href, read: n.read }));
+    const prefs = { low: true, order: true, stock: true, banner: true, desktop: false, sound: false, live: true };
+    return { parts, kits, projects, moves, hist, notes, prefs, alerted: null, liveIx: 0, seq: 1044 };
+  }
+
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
+  if (!S || !S.parts || !S.hist || !S.notes || !S.parts[0] || !S.parts[0].brand) S = seed();
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* demo keeps working in memory */ } };
+  const save = () => { scanStock(); persist(); };
+
+  /* ---------- Stock maths ---------- */
+  const part = id => S.parts.find(p => p.id === id);
+  const reserved = (pid, exceptId) => S.projects.reduce((t, pr) => pr.status === 'reserved' && pr.id !== exceptId
+    ? t + pr.items.filter(i => i.pid === pid).reduce((a, i) => a + i.qty, 0) : t, 0);
+  const avail = (pid, exceptId) => part(pid).stock - reserved(pid, exceptId);
+  const stockState = p => { const a = avail(p.id); return a <= 0 ? 'bad' : a < p.min ? 'warn' : 'ok'; };
+  const stateLabel = { ok: 'In stock', warn: 'Running low', bad: 'Out of stock' };
+  const kwOf = items => items.reduce((t, i) => t + (part(i.pid).w || 0) * i.qty, 0) / 1000;
+  const costOf = items => items.reduce((t, i) => t + part(i.pid).cost * i.qty, 0);
+  const priceOf = items => items.reduce((t, i) => t + part(i.pid).price * i.qty, 0);
+
+  function canBuild(items) {
+    if (!items.length) return { n: 0, by: null };
+    let n = Infinity, by = null;
+    items.forEach(i => { const k = Math.floor(Math.max(0, avail(i.pid)) / i.qty); if (k < n) { n = k; by = i.pid; } });
+    return { n, by };
+  }
+  function shortages(items, exceptId) {
+    const need = {};
+    items.forEach(i => { need[i.pid] = (need[i.pid] || 0) + i.qty; });
+    return Object.keys(need).map(pid => ({ pid, need: need[pid], have: Math.max(0, avail(pid, exceptId)) }))
+      .filter(x => x.have < x.need).map(x => ({ ...x, short: x.need - x.have }));
+  }
+  function buyList() {
+    const demand = {}, who = {};
+    S.projects.filter(p => p.status === 'quote').forEach(p => p.items.forEach(i => {
+      demand[i.pid] = (demand[i.pid] || 0) + i.qty;
+      (who[i.pid] = who[i.pid] || new Set()).add(p.customer);
+    }));
+    return S.parts.map(p => {
+      const a = avail(p.id), d = demand[p.id] || 0;
+      const gap = d + p.min - a;
+      if (gap <= 0) return null;
+      const qty = Math.ceil(gap / p.pack) * p.pack;
+      const reasons = [];
+      if (d > a) reasons.push('Needed for quotations: ' + [...who[p.id]].join(', '));
+      if (a - d < p.min) reasons.push('Keep minimum ' + qn(p.min) + ' ' + p.unit);
+      return { p, a, d, qty, reasons };
+    }).filter(Boolean);
+  }
+
+  /* ---------- UI helpers ---------- */
+  function toast(msg, o) {
+    o = o || {};
+    const box = $('#banners'); while (box.children.length >= 4) box.firstChild.remove();
+    const t = document.createElement('div'), body = document.createElement('div'), who = document.createElement('b'), txt = document.createElement('span'), ic = document.createElement('span');
+    t.className = 'toast'; t.setAttribute('role', 'status'); ic.className = 'ti' + (o.tone ? ' ' + o.tone : ''); who.textContent = o.title || 'Saurasakti'; txt.className = 'tm'; txt.textContent = msg;
+    body.append(who, txt); t.append(ic, body);
+    if (o.href) {
+      t.classList.add('link'); t.tabIndex = 0;
+      t.addEventListener('click', () => { const n = o.id && S.notes.find(x => x.id === o.id); if (n) { n.read = true; persist(); updateBell(); } t.remove(); go(o.href.slice(1)); });
+    }
+    box.appendChild(t); setTimeout(() => t.remove(), o.ms || 3200);
+  }
+  let modalActions = [];
+  function modal(title, body, actions, wide) {
+    modalActions = actions || [];
+    $('#layer').innerHTML = '<div class="scrim" data-act="scrim"><div class="modal' + (wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
+      '<div class="modal-h"><h2>' + esc(title) + '</h2><button class="x" data-act="close" aria-label="Close">' + ICON.x + '</button></div>' +
+      '<div class="modal-b">' + body + '</div>' +
+      (modalActions.length ? '<div class="modal-f">' + modalActions.map((a, i) => '<button class="btn ' + (a.cls || '') + '" data-act="mact" data-i="' + i + '">' + esc(a.label) + '</button>').join('') + '</div>' : '') +
+      '</div></div>';
+    const f = $('#layer input, #layer select'); if (f) f.focus();
+  }
+  const closeModal = () => { $('#layer').innerHTML = ''; modalActions = []; };
+  const partOptions = (sel, filter, by) => (by === 'brand' ? [...new Set(S.parts.map(p => p.brand))].sort() : Object.keys(CATS)).map(g => {
+    const ps = S.parts.filter(p => (by === 'brand' ? p.brand === g : p.cat === g) && (!filter || filter(p)));
+    return ps.length ? '<optgroup label="' + esc(by === 'brand' ? g : CATS[g]) + '">' + ps.map(p => '<option value="' + p.id + '"' + (p.id === sel ? ' selected' : '') + '>' + esc(p.name) + ' · ' + qn(Math.max(0, avail(p.id))) + ' ' + p.unit + ' free</option>').join('') + '</optgroup>' : '';
+  }).join('');
+  const pill = (cls, txt) => '<span class="pill ' + cls + '">' + esc(txt) + '</span>';
+  const route = () => { const h = (location.hash || '#home').slice(1); return ROUTES.some(r => r[0] === h) ? h : 'home'; };
+  const go = r => { if (location.hash === '#' + r) render(); else location.hash = r; };
+
+  /* ---------- Views ---------- */
+  const V = {};
+
+  /* ---------- Insight helpers ---------- */
+  const sum = a => a.reduce((t, x) => t + x, 0);
+  const dAgo = s => Math.round((new Date(daysAgo(0) + 'T00:00:00') - new Date(s + 'T00:00:00')) / 86400000);
+  const stockValue = () => sum(S.parts.map(p => p.stock * p.cost));
+  const lakh = v => v >= 100000 ? (v / 100000).toFixed(1).replace(/\.0$/, '') + 'L' : v >= 1000 ? (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(v));
+  const svgI = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  Object.assign(ICON, {
+    alert: svgI('<path d="M12 3.5l9 16h-18z"/><path d="M12 10v4M12 17v.1"/>'),
+    clock: svgI('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    trend: svgI('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'),
+    star: svgI('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
+    coin: svgI('<circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.5 9.5c-.5-1-1.4-1.5-2.5-1.5-1.4 0-2.5.8-2.5 2s1 1.6 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1.1 0-2-.5-2.5-1.5"/>')
+  });
+  const idleDays = p => { const ds = S.moves.filter(m => m.pid === p.id).map(m => dAgo(m.date)); return ds.length ? Math.min(...ds) : (p.idle || 0); };
+  const coverDays = p => (p.pm > 0 ? Math.max(0, avail(p.id)) / (p.pm / 30) : Infinity);
+  const coverTone = d => d < 21 ? 'bad' : d < 45 ? 'warn' : 'ok';
+  const coverText = d => d >= 365 ? '1 year+' : Math.round(d) + ' days';
+  const coverPill = p => p.pm > 0 ? pill(coverTone(coverDays(p)), coverText(coverDays(p))) : '<span class="muted">-</span>';
+  const billed = o => priceOf(o.items) + Number(o.labour || 0);
+
+  function liveBucket() {
+    const sold = S.projects.filter(o => (o.status === 'dispatched' || o.status === 'installed') && dAgo(o.date) <= 30);
+    return {
+      rev: sum(sold.map(billed)), margin: sum(sold.map(o => priceOf(o.items) - costOf(o.items))), kw: sum(sold.map(o => kwOf(o.items))), n: sold.length,
+      buy: sum(S.moves.filter(m => m.type === 'in' && dAgo(m.date) <= 30).map(m => m.qty * part(m.pid).cost)), sv: stockValue()
+    };
+  }
+  const series = () => S.hist.concat([liveBucket()]);
+  const periodStart = (i, n) => { const d = new Date(today); d.setDate(d.getDate() - 30 * (n - i)); return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+  const periodLabels = () => { const n = S.hist.length + 1; return Array.from({ length: n }, (_, i) => i === n - 1 ? 'Last 30d' : periodStart(i, n)); };
+  const periodTitle = (i, n) => i === n - 1 ? 'Last 30 days' : '30 days from ' + periodStart(i, n);
+
+  /* ---------- Charts (SVG strings; tooltips are read from data-tip) ---------- */
+  const tip = (title, rows) => esc(title + ';;' + rows.map(r => r.join('::')).join(';;'));
+  function nice(max, n) {
+    const raw = (max || 1) / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+    const step = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p, k = Math.max(1, Math.ceil(max / step - 1e-9));
+    return { step, n: k, top: step * k };
+  }
+  function gridLines(W, L, R, T, ph, mx) {
+    let g = '';
+    for (let i = 0; i <= mx.n; i++) {
+      const v = i * mx.step, y = (T + ph - v / mx.top * ph).toFixed(1);
+      g += '<line class="gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text class="ax" x="' + (L - 8) + '" y="' + (+y + 4) + '" text-anchor="end">' + (v ? '₹' + lakh(v) : '0') + '</text>';
+    }
+    return g;
+  }
+  function barPath(x, y0, w, h, fill) {
+    h = Math.max(h, 0); const r = Math.min(4, h, w / 2);
+    return '<path class="mk" d="M' + x.toFixed(1) + ' ' + y0.toFixed(1) + 'v' + (-(h - r)).toFixed(1) + 'q0 ' + (-r) + ' ' + r + ' ' + (-r) + 'h' + (w - 2 * r).toFixed(1) + 'q' + r + ' 0 ' + r + ' ' + r + 'v' + (h - r).toFixed(1) + 'z" style="fill:' + fill + '"/>';
+  }
+  function barChart(ser, labels) {
+    const W = 480, H = 240, L = 56, R = 10, T = 24, B = 30, pw = W - L - R, ph = H - T - B, n = ser.length;
+    const mx = nice(Math.max(...ser.map(s => s.rev)), 4), y = v => T + ph - v / mx.top * ph, gw = pw / n, bw = Math.min(26, gw * .3);
+    let out = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Billed value and parts margin for the last ' + n + ' periods of 30 days">' + gridLines(W, L, R, T, ph, mx);
+    ser.forEach((s, i) => {
+      const cx = L + gw * i + gw / 2, last = i === n - 1;
+      const t = tip(periodTitle(i, n), [['Billed', inr(s.rev), 'var(--series-1)'], ['Parts margin', inr(s.margin), 'var(--series-2)'], ['Systems', s.n + ' (' + s.kw.toFixed(1) + ' kWp)', 'var(--muted)']]);
+      out += '<g class="col"><rect class="h" tabindex="0" data-tip="' + t + '" x="' + (L + gw * i).toFixed(1) + '" y="' + T + '" width="' + gw.toFixed(1) + '" height="' + ph + '" rx="8"/>' +
+        barPath(cx - bw - 1, y(0), bw, s.rev / mx.top * ph, 'var(--series-1)') + barPath(cx + 1, y(0), bw, s.margin / mx.top * ph, 'var(--series-2)') +
+        '<text class="vl" x="' + (cx - bw / 2 - 1).toFixed(1) + '" y="' + (y(s.rev) - 6).toFixed(1) + '" text-anchor="middle">' + lakh(s.rev) + '</text>' +
+        '<text class="ax' + (last ? ' st' : '') + '" x="' + cx.toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle">' + labels[i] + '</text></g>';
+    });
+    return out + '</svg>';
+  }
+  function areaChart(vals, labels, titles, name) {
+    const W = 480, H = 224, L = 56, R = 18, T = 26, B = 30, pw = W - L - R, ph = H - T - B, n = vals.length;
+    const mx = nice(Math.max(...vals), 4), x = i => L + pw * i / (n - 1), y = v => T + ph - v / mx.top * ph, cw = pw / (n - 1);
+    const pts = vals.map((v, i) => x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' L');
+    let out = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(name) + ' over the last ' + n + ' periods">' + gridLines(W, L, R, T, ph, mx) +
+      '<path class="mk" d="M' + pts + ' L' + x(n - 1).toFixed(1) + ' ' + y(0).toFixed(1) + ' L' + x(0).toFixed(1) + ' ' + y(0).toFixed(1) + 'Z" style="fill:var(--series-1);opacity:.14"/>' +
+      '<path class="mk" d="M' + pts + '" fill="none" style="stroke:var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    vals.forEach((v, i) => {
+      const last = i === n - 1;
+      out += '<g class="col"><rect class="h" tabindex="0" data-tip="' + tip(titles[i], [[name, inr(v), 'var(--series-1)']]) + '" x="' + (x(i) - cw / 2).toFixed(1) + '" y="' + T + '" width="' + cw.toFixed(1) + '" height="' + ph + '"/>' +
+        '<line class="xh mk" x1="' + x(i).toFixed(1) + '" x2="' + x(i).toFixed(1) + '" y1="' + T + '" y2="' + y(0).toFixed(1) + '"/>' +
+        '<circle class="mk" cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="' + (last ? 5.5 : 4) + '" style="fill:var(--series-1);stroke:var(--surface)" stroke-width="2"/>' +
+        (last ? '<text class="vl" x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(v) - 12).toFixed(1) + '" text-anchor="end">₹' + lakh(v) + '</text>' : '') +
+        '<text class="ax' + (last ? ' st' : '') + '" x="' + x(i).toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle">' + labels[i] + '</text></g>';
+    });
+    return out + '</svg>';
+  }
+  function spark(v, color) {
+    const W = 112, H = 36, p = 4, mn = Math.min(...v), r = (Math.max(...v) - mn) || 1;
+    const pts = v.map((x, i) => [p + i * (W - 2 * p) / (v.length - 1), H - p - (x - mn) / r * (H - 2 * p)]);
+    const d = 'M' + pts.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L'), l = pts[pts.length - 1];
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true"><path d="' + d + ' L' + l[0].toFixed(1) + ' ' + (H - 1) + ' L' + pts[0][0].toFixed(1) + ' ' + (H - 1) + 'Z" style="fill:' + color + ';opacity:.13"/>' +
+      '<path d="' + d + '" fill="none" style="stroke:' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="' + l[0].toFixed(1) + '" cy="' + l[1].toFixed(1) + '" r="3" style="fill:' + color + ';stroke:var(--surface)" stroke-width="1.5"/></svg>';
+  }
+  function donut(items, top, bottom) {
+    const R = 54, C = 2 * Math.PI * R, live = items.filter(i => i.v > 0), tot = sum(live.map(i => i.v)) || 1, gap = live.length > 1 ? 3 : 0;
+    let off = 0;
+    const segs = live.map(i => {
+      const len = i.v / tot * C, dash = Math.max(len - gap, .1);
+      const s = '<circle class="seg" cx="70" cy="70" r="' + R + '" fill="none" stroke-width="18" style="stroke:' + i.color + '" stroke-dasharray="' + dash.toFixed(2) + ' ' + (C - dash).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 70 70)" data-tip="' + tip(i.label, [[i.label, i.fmt, i.color]]) + '"/>';
+      off += len; return s;
+    }).join('');
+    return '<svg viewBox="0 0 140 140" role="img" aria-label="' + esc(bottom) + ' breakdown"><circle cx="70" cy="70" r="' + R + '" fill="none" stroke-width="18" style="stroke:var(--surface-2)"/>' + segs +
+      '<text class="dn" x="70" y="72" text-anchor="middle">' + top + '</text><text class="dl" x="70" y="88" text-anchor="middle">' + bottom + '</text></svg>';
+  }
+  const tableView = (head, rows) => '<details class="tv"><summary>View as table</summary><div class="tbl-wrap"><table><thead><tr>' + head.map((h, i) => '<th' + (i ? ' class="r"' : '') + '>' + h + '</th>').join('') + '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.map((c, i) => '<td' + (i ? ' class="r num"' : '') + '>' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div></details>';
+  const hbar = (pct, color) => '<div class="hb"><i style="width:' + Math.max(2, Math.min(100, pct)).toFixed(1) + '%;background:' + color + '"></i></div>';
+  const legend = items => '<div class="legend">' + items.map(i => '<span class="lg"><i style="background:' + i[1] + '"></i>' + i[0] + '</span>').join('') + '</div>';
+
+  /* tooltip layer: one element, text set with textContent */
+  const tipEl = document.createElement('div'); tipEl.className = 'tip'; tipEl.hidden = true; document.body.appendChild(tipEl);
+  function showTip(el, x, y) {
+    const parts = (el.dataset.tip || '').split(';;'); tipEl.textContent = '';
+    const b = document.createElement('b'); b.textContent = parts[0]; tipEl.appendChild(b);
+    parts.slice(1).forEach(r => {
+      const c = r.split('::'), row = document.createElement('div'); row.className = 'tr';
+      const k = document.createElement('span'); k.className = 'k'; k.style.background = c[2] || 'var(--muted)';
+      const l = document.createElement('span'); l.className = 'tl'; l.textContent = c[0];
+      const v = document.createElement('span'); v.className = 'tvl'; v.textContent = c[1];
+      row.append(k, l, v); tipEl.appendChild(row);
+    });
+    tipEl.hidden = false;
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    tipEl.style.left = Math.max(8, Math.min(x + 14, innerWidth - w - 8)) + 'px';
+    tipEl.style.top = (y - h - 14 > 8 ? y - h - 14 : y + 20) + 'px';
+  }
+  document.addEventListener('pointermove', ev => { const el = ev.target.closest && ev.target.closest('[data-tip]'); if (el) showTip(el, ev.clientX, ev.clientY); else tipEl.hidden = true; });
+  document.addEventListener('focusin', ev => { const el = ev.target.closest && ev.target.closest('[data-tip]'); if (el) { const r = el.getBoundingClientRect(); showTip(el, r.left + r.width / 2, r.top + 24); } });
+  document.addEventListener('focusout', () => { tipEl.hidden = true; });
+  window.addEventListener('scroll', () => { tipEl.hidden = true; }, true);
+
+  /* ---------- Cards ---------- */
+  const delta = (c, p, goodUp) => {
+    if (!p) return '';
+    const ch = (c - p) / p * 100; if (!isFinite(ch)) return '';
+    const cls = goodUp === null || Math.abs(ch) < .5 ? '' : ((ch >= 0) === goodUp ? 'up' : 'down');
+    return '<span class="delta ' + cls + '" title="Compared with the previous 30 days">' + (ch >= 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(Math.abs(ch) < 10 ? 1 : 0) + '%</span>';
+  };
+  const kpi = k => {
+    const tag = k.href ? 'a' : 'div';
+    return '<' + tag + ' class="card kpi' + (k.alert ? ' alert' : '') + '"' + (k.href ? ' href="' + k.href + '"' : '') + '><div class="kpi-top"><span class="ico sm ' + k.tone + '">' + ICON[k.icon] + '</span><span class="lbl">' + k.label + '</span>' + (k.delta || '') + '</div>' +
+      '<div class="kpi-row"><span class="val num">' + k.value + '</span>' + (k.spark ? spark(k.spark, 'var(--series-1)') : '') + '</div><span class="sub">' + k.sub + '</span></' + tag + '>';
+  };
+  const insCards = list => '<div class="ins-grid">' + list.map(i => '<article class="card ins"><span class="ico ' + i.tone + '">' + ICON[i.icon] + '</span><div class="ins-b"><h3>' + i.title + '</h3><p>' + i.text + '</p>' +
+    (i.href ? '<a class="link" href="' + i.href + '">' + i.cta + ' ›</a>' : '') + '</div></article>').join('') + '</div>';
+
+  function insights() {
+    const out = [], ser = series(), cur = ser[ser.length - 1], prev = ser[ser.length - 2];
+    S.projects.filter(o => o.status === 'quote').forEach(o => {
+      const sh = shortages(o.items, o.id);
+      if (sh.length) out.push({ tone: 'bad', icon: 'alert', title: esc(o.customer) + ' is waiting on stock', text: inr(billed(o)) + ' quotation ' + o.id + ' cannot be reserved yet. ' + sh.map(s => esc(part(s.pid).name) + ' is short by ' + qn(s.short)).join(', ') + '.', href: '#buy', cta: 'Open purchase list' });
+    });
+    const crit = S.parts.filter(p => p.pm > 0 && coverDays(p) < 21).sort((a, b) => coverDays(a) - coverDays(b));
+    if (crit.length) out.push({ tone: 'warn', icon: 'clock', title: crit.length + ' part' + (crit.length > 1 ? 's' : '') + ' will run out within 3 weeks', text: crit.slice(0, 3).map(p => esc(p.name) + ' (' + Math.round(coverDays(p)) + ' days)').join(', ') + '. Based on your usual monthly usage.', href: '#buy', cta: 'Plan purchase' });
+    const slow = S.parts.filter(p => p.stock > 0 && idleDays(p) >= 60);
+    if (slow.length) out.push({ tone: 'info', icon: 'coin', title: inr(sum(slow.map(p => p.stock * p.cost))) + ' is tied up in slow-moving parts', text: slow.map(p => esc(p.name) + ' (' + idleDays(p) + ' days idle)').join(', ') + '. Offer these in the next quotation.', href: '#reports', cta: 'See slow stock' });
+    if (prev.rev > 0) {
+      const ch = (cur.rev - prev.rev) / prev.rev * 100;
+      out.push({ tone: ch >= 0 ? 'ok' : 'warn', icon: 'trend', title: 'Sales are ' + (ch >= 0 ? 'up ' : 'down ') + Math.abs(Math.round(ch)) + '% on the previous 30 days', text: inr(cur.rev) + ' billed across ' + cur.n + ' system' + (cur.n === 1 ? '' : 's') + ', compared with ' + inr(prev.rev) + '.', href: '#orders', cta: 'View orders' });
+    }
+    const fast = S.parts.filter(p => p.pm > 0).sort((a, b) => b.pm * b.price - a.pm * a.price)[0];
+    if (fast) out.push({ tone: 'ok', icon: 'star', title: 'Best seller: ' + esc(fast.name), text: 'About ' + qn(fast.pm) + ' ' + fast.unit + ' a month, worth ' + inr(fast.pm * fast.price) + ' in sales. Current stock lasts ' + coverText(coverDays(fast)) + '.', href: '#stock', cta: 'Open stock' });
+    const km = S.kits.filter(k => k.items.length).map(k => ({ k, m: priceOf(k.items) - costOf(k.items), pct: (priceOf(k.items) - costOf(k.items)) / priceOf(k.items) })).sort((a, b) => b.m - a.m);
+    if (km.length > 1) out.push({ tone: 'ok', icon: 'coin', title: esc(km[0].k.name) + ' earns the most per system', text: inr(km[0].m) + ' parts margin (' + Math.round(km[0].pct * 100) + '%) on each one. ' + esc(km[km.length - 1].k.name) + ' earns the least at ' + inr(km[km.length - 1].m) + '.', href: '#kits', cta: 'Open kits' });
+    const rank = { bad: 0, warn: 1, info: 2, ok: 3 };
+    return out.map((x, i) => [x, i]).sort((a, b) => rank[a[0].tone] - rank[b[0].tone] || a[1] - b[1]).map(x => x[0]);
+  }
+
+  /* ---------- Home ---------- */
+  V.home = () => {
+    const ser = series(), cur = ser[ser.length - 1], prev = ser[ser.length - 2], labels = periodLabels(), n = ser.length;
+    const open = S.projects.filter(p => p.status === 'quote' || p.status === 'reserved');
+    const low = S.parts.filter(p => stockState(p) !== 'ok'), outN = S.parts.filter(p => stockState(p) === 'bad').length;
+    const builds = S.kits.map(k => ({ k, ...canBuild(k.items) })), ready = sum(builds.map(b => b.n));
+    const recent = S.moves.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+    const soon = S.parts.filter(p => p.pm > 0).sort((a, b) => coverDays(a) - coverDays(b)).slice(0, 4);
+    const runway = '<div style="border-top:1px solid var(--line);padding:12px 0 8px"><div class="small muted" style="padding:0 20px 4px;font-weight:600">Running out soonest</div>' +
+      soon.map(p => '<div class="hrow h-link" data-act="part" data-id="' + p.id + '"><span class="nm">' + esc(p.name) + '</span>' + hbar(coverDays(p) / 120 * 100, coverDays(p) < 21 ? 'var(--bad)' : coverDays(p) < 45 ? 'var(--warn)' : 'var(--series-1)') + '<span class="v">' + pill(coverTone(coverDays(p)), coverText(coverDays(p))) + '</span></div>').join('') + '</div>';
+    const hc ={ ok: 0, warn: 0, bad: 0 }; S.parts.forEach(p => hc[stockState(p)]++);
+    const hItems = [{ label: 'In stock', v: hc.ok, color: 'var(--ok)', fmt: hc.ok + ' parts' }, { label: 'Running low', v: hc.warn, color: 'var(--warn)', fmt: hc.warn + ' parts' }, { label: 'Out of stock', v: hc.bad, color: 'var(--bad)', fmt: hc.bad + ' parts' }];
+    return '<div class="head"><div><h1>Good ' + (today.getHours() < 12 ? 'morning' : today.getHours() < 17 ? 'afternoon' : 'evening') + '<span class="demo-pill">Demo</span></h1>' +
+      '<p>Here is what is in the godown and what you can sell today.</p></div>' +
+      '<div class="btns"><button class="btn ghost mob-reset" data-act="reset">Reset sample data</button><button class="btn" data-act="stockin">+ Receive stock</button><a class="btn primary" href="#new-order" data-act="usekit" data-id="k1">+ New order</a></div></div>' +
+      '<div class="kpis">' +
+      kpi({ href: '#reports', icon: 'stock', tone: 'info', label: 'Stock value', value: inr(stockValue()), sub: 'at purchase price', delta: delta(stockValue(), prev.sv, null), spark: ser.map(s => s.sv) }) +
+      kpi({ href: '#reports', icon: 'reports', tone: 'ok', label: 'Sales, last 30 days', value: inr(cur.rev), sub: cur.n + ' system' + (cur.n === 1 ? '' : 's') + ' · ' + cur.kw.toFixed(1) + ' kWp', delta: delta(cur.rev, prev.rev, true), spark: ser.map(s => s.rev) }) +
+      kpi({ href: '#orders', icon: 'orders', tone: 'sun', label: 'Open pipeline', value: inr(sum(open.map(billed))), sub: open.length + ' order' + (open.length === 1 ? '' : 's') + ' waiting' }) +
+      kpi({ href: '#buy', icon: 'alert', tone: low.length ? 'bad' : 'ok', alert: low.length > 0, label: 'Parts needing attention', value: low.length, sub: outN + ' out of stock · ' + (low.length - outN) + ' running low' }) +
+      '</div>' +
+      '<div class="sec-title"><h2>Insights for today</h2><a class="link" href="#reports">All insights ›</a></div>' + insCards(insights().slice(0, 4)) +
+      '<div class="grid2"><section class="card"><div class="card-h"><h2>Sales and margin<span class="sub">Last ' + n + ' periods of 30 days</span></h2>' + legend([['Billed', 'var(--series-1)'], ['Parts margin', 'var(--series-2)']]) + '</div>' +
+      '<div class="card-b"><div class="chart">' + barChart(ser, labels) + '</div>' +
+      tableView(['Period', 'Billed', 'Parts margin', 'Systems'], ser.map((s, i) => [periodTitle(i, n), inr(s.rev), inr(s.margin), s.n])) + '</div></section>' +
+      '<section class="card"><div class="card-h"><h2>Stock health<span class="sub">All ' + S.parts.length + ' parts, after reservations</span></h2></div><div class="card-b"><div class="health">' +
+      donut(hItems, S.parts.length, 'parts') + '<div class="legend">' + hItems.map(i => '<span class="lg"><span><i style="background:' + i.color + '"></i>' + i.label + '</span><b class="num">' + i.v + '</b></span>').join('') + '</div></div></div>' + runway + '</section></div>' +
+      '<div class="grid2">' +
+      '<section class="card"><div class="card-h"><h2>What can I build right now?<span class="sub">' + ready + ' complete system' + (ready === 1 ? '' : 's') + ' ready in the godown</span></h2><a class="btn ghost sm" href="#kits">All kits</a></div><div class="list">' +
+      builds.map(b => '<div class="li"><div class="big-n' + (b.n ? '' : ' zero') + '">' + b.n + '</div><div class="grow"><div class="pname">' + esc(b.k.name) + '</div>' +
+        (b.by ? '<div class="small ' + (b.n ? 'muted' : 'bneck') + '">' + (b.n ? 'Limited by ' : 'Blocked by ') + esc(part(b.by).name) + ' (' + qn(Math.max(0, avail(b.by))) + ' ' + part(b.by).unit + ' free)</div>' : '') +
+        '</div><a class="btn sm" href="#new-order" data-act="usekit" data-id="' + b.k.id + '">Sell</a></div>').join('') +
+      '</div></section>' +
+      '<section class="card"><div class="card-h"><h2>Needs attention</h2><a class="btn ghost sm" href="#buy">Purchase list</a></div><div class="list">' +
+      (low.length ? low.map(p => '<div class="li click" data-act="part" data-id="' + p.id + '"><div class="grow"><div class="pname">' + esc(p.name) + '</div><div class="small muted">' + qn(Math.max(0, avail(p.id))) + ' ' + p.unit + ' free · minimum ' + qn(p.min) + '</div></div>' + pill(stockState(p), stateLabel[stockState(p)]) + '</div>').join('')
+        : '<div class="empty">Everything is above minimum stock.</div>') +
+      '</div></section></div>' +
+      '<section class="card"><div class="card-h"><h2>Recent stock movement</h2><a class="btn ghost sm" href="#reports">Full register</a></div>' + movesTable(recent) + '</section>';
+  };
+
+  function movesTable(list) {
+    const T = { in: ['ok', 'Received'], out: ['info', 'Dispatched'], return: ['plain', 'Returned'], adjust: ['bad', 'Adjusted'] };
+    if (!list.length) return '<div class="empty">No movement yet.</div>';
+    return '<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Part</th><th>Type</th><th class="r">Qty</th><th>Reference</th></tr></thead><tbody>' +
+      list.map(m => { const p = part(m.pid); return '<tr><td class="num">' + fmtDate(m.date) + '</td><td>' + esc(p.name) + '</td><td>' + pill(T[m.type][0], T[m.type][1]) + '</td><td class="r num">' + (m.qty > 0 ? '+' : '') + qn(m.qty) + ' ' + p.unit + '</td><td class="muted small">' + esc(m.ref) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+  }
+
+  /* ---------- Find parts: search + filters, shared by the Stock page and the part picker ---------- */
+  ICON.search = svgI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>');
+  const fold = s => String(s == null ? '' : s).toLowerCase();
+  const tokens = q => fold(q).split(/[\s,]+/).filter(Boolean);
+  const hay = p => fold([p.brand, p.name, p.sku, CATS[p.cat], p.unit, p.w ? p.w + 'wp' : ''].join(' '));
+  const hl = (txt, toks) => {
+    if (!toks.length) return esc(txt);
+    const re = new RegExp('(' + toks.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'ig');
+    return String(txt).split(re).map((s, i) => i % 2 ? '<mark>' + esc(s) + '</mark>' : esc(s)).join('');
+  };
+  const newFilter = extra => Object.assign({ q: '', cat: 'all', brands: [], status: 'all', more: false, open: false }, extra);
+  let stockFilter = newFilter({ sort: 'default' });
+  let pk = null;
+  function matchPart(p, f, skip) {
+    const h = hay(p);
+    if (!tokens(f.q).every(t => h.includes(t))) return false;
+    if (skip !== 'cat' && f.cat !== 'all' && p.cat !== f.cat) return false;
+    if (skip !== 'brand' && f.brands.length && !f.brands.includes(p.brand)) return false;
+    if (skip !== 'status' && f.status !== 'all' && stockState(p) !== f.status) return false;
+    return true;
+  }
+  const cmp = (x, y) => x === y ? 0 : x < y ? -1 : 1;
+  const catIx = p => Object.keys(CATS).indexOf(p.cat);
+  const SORTS = {
+    default: ['Category, then brand', (a, b) => catIx(a) - catIx(b) || a.brand.localeCompare(b.brand) || a.name.localeCompare(b.name)],
+    name: ['Name, A to Z', (a, b) => a.name.localeCompare(b.name)],
+    urgent: ['Most urgent first', (a, b) => cmp(avail(a.id) / Math.max(a.min, 1), avail(b.id) / Math.max(b.min, 1))],
+    cover: ['Days left, soonest first', (a, b) => cmp(coverDays(a), coverDays(b))],
+    value: ['Stock value, highest first', (a, b) => b.stock * b.cost - a.stock * a.cost]
+  };
+  function activeFilters(f) {
+    const a = [];
+    if (f.q.trim()) a.push(['q', '', '"' + f.q.trim() + '"']);
+    if (f.cat !== 'all') a.push(['cat', '', CATS[f.cat]]);
+    f.brands.forEach(b => a.push(['brand', b, b]));
+    if (f.status !== 'all') a.push(['status', '', stateLabel[f.status]]);
+    return a;
+  }
+  function filterPanel(key, f) {
+    const catN = {}, brN = {}, stN = { ok: 0, warn: 0, bad: 0 };
+    S.parts.forEach(p => {
+      if (matchPart(p, f, 'cat')) catN[p.cat] = (catN[p.cat] || 0) + 1;
+      if (matchPart(p, f, 'brand')) brN[p.brand] = (brN[p.brand] || 0) + 1;
+      if (matchPart(p, f, 'status')) stN[stockState(p)]++;
+    });
+    const chip = (act, id, label, n, on, extra) => '<button type="button" class="chip' + (on ? ' on' : '') + (!n && !on ? ' dim' : '') + '" data-act="' + act + '" data-f="' + key + '" data-id="' + esc(id) + '" aria-pressed="' + on + '">' + (extra || '') + esc(label) + ' <span class="cnt">' + n + '</span></button>';
+    const brands = [...new Set(S.parts.map(p => p.brand))].filter(b => brN[b] || f.brands.includes(b)).sort((a, b) => (brN[b] || 0) - (brN[a] || 0) || a.localeCompare(b));
+    const shown = f.more ? brands : brands.filter((b, i) => i < 8 || f.brands.includes(b));
+    const act = activeFilters(f), total = sum(Object.values(catN));
+    const more = brands.length > shown.length ? '<button type="button" class="chip more" data-act="fmore" data-f="' + key + '">+ ' + (brands.length - shown.length) + ' more</button>'
+      : (f.more && brands.length > 8 ? '<button type="button" class="chip more" data-act="fmore" data-f="' + key + '">Show fewer</button>' : '');
+    return '<div class="fsum"><button type="button" class="btn sm ftoggle" data-act="ftoggle" data-f="' + key + '" aria-expanded="' + f.open + '">Filters' + (act.length ? ' · ' + act.length : '') + '</button>' +
+      (act.length ? '<div class="afil">' + act.map(a => '<button type="button" class="afi" data-act="frem" data-f="' + key + '" data-k="' + a[0] + '" data-id="' + esc(a[1]) + '" aria-label="Remove filter ' + esc(a[2]) + '">' + esc(a[2]) + ICON.x + '</button>').join('') + '</div><button type="button" class="btn ghost sm" data-act="fclear" data-f="' + key + '">Clear all</button>'
+        : '<span class="muted small">Showing every part. Pick a brand or category to narrow it down.</span>') + '</div>' +
+      '<div class="frows"><div class="frow"><span class="fl">Category</span><div class="chips">' + chip('fcat', 'all', 'All', total, f.cat === 'all') + Object.entries(CATS).map(([k, v]) => chip('fcat', k, v, catN[k] || 0, f.cat === k)).join('') + '</div></div>' +
+      '<div class="frow"><span class="fl">Brand</span><div class="chips">' + (shown.length ? shown.map(b => chip('fbrand', b, b, brN[b] || 0, f.brands.includes(b))).join('') : '<span class="muted small">No brand matches</span>') + more + '</div></div>' +
+      (key === 'stock' ? '<div class="frow"><span class="fl">Availability</span><div class="chips seg">' + chip('fstatus', 'all', 'All', S.parts.filter(p => matchPart(p, f, 'status')).length, f.status === 'all') +
+        ['ok', 'warn', 'bad'].map(s => chip('fstatus', s, stateLabel[s], stN[s], f.status === s, '<i class="dot ' + s + '"></i>')).join('') + '</div></div>' : '') + '</div>';
+  }
+  function filterAct(a, el) {
+    const key = el.dataset.f, f = key === 'pk' ? pk : stockFilter, id = el.dataset.id;
+    if (!f) return;
+    if (a === 'fcat') f.cat = f.cat === id ? 'all' : id;
+    if (a === 'fbrand') f.brands = f.brands.includes(id) ? f.brands.filter(b => b !== id) : f.brands.concat(id);
+    if (a === 'fstatus') f.status = f.status === id ? 'all' : id;
+    if (a === 'fclear') Object.assign(f, { q: '', cat: 'all', brands: [], status: 'all' });
+    if (a === 'fmore') f.more = !f.more;
+    if (a === 'ftoggle') f.open = !f.open;
+    if (a === 'frem') { const k = el.dataset.k; if (k === 'q') f.q = ''; else if (k === 'cat') f.cat = 'all'; else if (k === 'status') f.status = 'all'; else f.brands = f.brands.filter(b => b !== id); }
+    refreshFilter(key);
+  }
+  function refreshFilter(key) {
+    if (key === 'pk') { const q = $('#pk-q'); if (q && q.value !== pk.q) q.value = pk.q; $('#pk-res').innerHTML = pickerRes(); return; }
+    const q = $('#q'); if (q && q.value !== stockFilter.q) q.value = stockFilter.q;
+    const box = $('#stock-filters'); box.innerHTML = filterPanel('stock', stockFilter); box.classList.toggle('open', stockFilter.open);
+    $('#stock-table').innerHTML = stockTable();
+  }
+
+  V.stock = () => '<div class="head"><div><h1>Stock</h1><p>Find any part by brand, category or code. "Free" means not yet promised to any customer.</p></div>' +
+    '<div class="btns"><button class="btn" data-act="stockcsv">Export CSV</button><button class="btn" data-act="newpart">+ New part</button><button class="btn primary" data-act="stockin">+ Receive stock</button></div></div>' +
+    '<div class="searchbar"><span class="si">' + ICON.search + '</span><input class="search" id="q" type="search" autocomplete="off" placeholder="Search brand, part or code. Try: waaree 540, inverter 5 kw, mc4" value="' + esc(stockFilter.q) + '" aria-label="Search parts"><kbd class="kbd" aria-hidden="true">/</kbd></div>' +
+    '<section class="card filters' + (stockFilter.open ? ' open' : '') + '" id="stock-filters">' + filterPanel('stock', stockFilter) + '</section>' +
+    '<section class="card" id="stock-table">' + stockTable() + '</section>';
+
+  function stockTable() {
+    const f = stockFilter, toks = tokens(f.q), rows = S.parts.filter(p => matchPart(p, f)).sort(SORTS[f.sort][1]);
+    const head = '<div class="card-h"><span><b class="num">' + rows.length + '</b> <span class="muted">of ' + S.parts.length + ' parts</span></span><label class="sortl"><span class="muted small">Sort by</span><select id="st-sort" data-act="fsort" aria-label="Sort parts">' +
+      Object.entries(SORTS).map(([k, v]) => '<option value="' + k + '"' + (f.sort === k ? ' selected' : '') + '>' + v[0] + '</option>').join('') + '</select></label></div>';
+    if (!rows.length) {
+      const act = activeFilters(f);
+      return head + '<div class="empty"><b>No part matches.</b><div class="small" style="margin:6px 0 14px">Check the spelling, or remove a filter.</div><div class="btns" style="justify-content:center">' +
+        act.map(a => '<button type="button" class="afi" data-act="frem" data-f="stock" data-k="' + a[0] + '" data-id="' + esc(a[1]) + '">' + esc(a[2]) + ICON.x + '</button>').join('') +
+        '<button type="button" class="btn sm" data-act="fclear" data-f="stock">Clear all</button><button type="button" class="btn sm primary" data-act="newpart">+ Add as new part</button></div></div>';
+    }
+    return head + '<div class="tbl-wrap"><table><thead><tr><th>Part</th><th>Brand</th><th class="r">In godown</th><th class="r">Reserved</th><th class="r">Free</th><th class="r">Lasts</th><th class="r">Buy price</th><th class="r">Sell price</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(p => { const r = reserved(p.id), st = stockState(p); return '<tr class="click" data-act="part" data-id="' + p.id + '"><td><div class="pname">' + hl(p.name, toks) + '</div><div class="mono">' + hl(p.sku, toks) + ' · ' + CATS[p.cat] + '</div></td><td>' + hl(p.brand, toks) + '</td>' +
+        '<td class="r num">' + qn(p.stock) + ' ' + p.unit + '</td><td class="r num">' + (r ? qn(r) : '<span class="muted">0</span>') + '</td><td class="r num"><b>' + qn(p.stock - r) + '</b></td><td class="r">' + coverPill(p) + '</td>' +
+        '<td class="r num">' + inr(p.cost) + '</td><td class="r num">' + inr(p.price) + '</td><td>' + pill(st, stateLabel[st]) + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+  }
+
+  /* Part picker: search + brand and category filters for adding parts to an order or a kit */
+  function openPicker(title, taken, onPick) {
+    pk = newFilter({ taken, onPick, added: [] });
+    modal(title, '<div class="searchbar"><span class="si">' + ICON.search + '</span><input class="search" id="pk-q" type="search" autocomplete="off" placeholder="Search brand, part or code" aria-label="Search parts"></div>' +
+      '<div id="pk-res">' + pickerRes() + '</div><p class="small muted">Press Enter to add the top result. Add as many parts as you need, then press Done.</p>', [{ label: 'Done', cls: 'primary', fn: closeModal }], true);
+  }
+  const pickerRows = () => S.parts.filter(p => matchPart(p, pk)).sort(SORTS.default[1]);
+  function pickerRes() {
+    const rows = pickerRows(), toks = tokens(pk.q);
+    return '<div class="filters flat' + (pk.open ? ' open' : '') + '">' + filterPanel('pk', pk) + '</div><div class="pk-list" role="list">' +
+      (rows.length ? rows.map(p => {
+        const done = pk.added.includes(p.id) || pk.taken(p.id), st = stockState(p);
+        return '<div class="pk-row" role="listitem"><div class="grow"><div class="pname">' + hl(p.name, toks) + '</div><div class="small muted">' + hl(p.brand, toks) + ' · ' + qn(Math.max(0, avail(p.id))) + ' ' + p.unit + ' free · ' + inr(p.price) + '</div></div>' + pill(st, stateLabel[st]) +
+          '<button type="button" class="btn sm' + (done ? '' : ' primary') + '" data-act="pkadd" data-id="' + p.id + '"' + (done ? ' disabled' : '') + '>' + (done ? 'Added' : 'Add') + '</button></div>';
+      }).join('') : '<div class="empty">No part matches. Try fewer words or clear the filters.</div>') + '</div>';
+  }
+  function pickAdd(id) {
+    if (!pk || pk.added.includes(id) || pk.taken(id)) return;
+    pk.added.push(id); pk.onPick(id); $('#pk-res').innerHTML = pickerRes(); toast('Added ' + part(id).name);
+  }
+
+  V.kits = () => {
+    return '<div class="head"><div><h1>System kits</h1><p>A kit is the list of parts that make one complete system. Change a quantity and every count updates.</p></div>' +
+      '<div class="btns"><button class="btn primary" data-act="newkit">+ New kit</button></div></div>' +
+      '<div class="kits">' + S.kits.map(kitCard).join('') + '</div>';
+  };
+  function kitCard(k) {
+    const b = canBuild(k.items), kw = kwOf(k.items);
+    return '<section class="card"><div class="kit-top"><div class="grow"><h2>' + esc(k.name) + '</h2><p class="small muted">' + esc(k.note || '') + '</p>' +
+      '<p class="small" style="margin-top:6px">' + (kw ? '<b>' + kw.toFixed(2) + ' kWp</b> · ' : '') + 'Parts cost ' + inr(costOf(k.items)) + '</p>' +
+      (b.by && b.n < 3 ? '<p class="bneck" style="margin-top:4px">Short on: ' + esc(part(b.by).name) + '</p>' : '') + '</div>' +
+      '<div class="can' + (b.n ? '' : ' zero') + '"><div class="n">' + b.n + '</div><div class="t">can build</div></div></div>' +
+      '<div class="kit-items">' + k.items.map((i, ix) => { const p = part(i.pid), a = Math.max(0, avail(i.pid)), enough = a >= i.qty;
+        return '<div class="row"><div><div>' + esc(p.name) + '</div><div class="small" style="color:var(--' + (enough ? 'muted' : 'bad') + ')">' + qn(a) + ' ' + p.unit + ' free</div></div>' +
+          '<input class="qty-in" type="number" min="1" id="kq-' + k.id + '-' + ix + '" value="' + i.qty + '" data-act="kitqty" data-k="' + k.id + '" data-i="' + ix + '" aria-label="Quantity of ' + esc(p.name) + '">' +
+          '<span class="small muted">' + p.unit + '</span><button class="x" data-act="kitdel" data-k="' + k.id + '" data-i="' + ix + '" aria-label="Remove ' + esc(p.name) + '">' + ICON.x + '</button></div>'; }).join('') +
+      '</div><div class="kit-foot"><button class="btn sm" data-act="kitpick" data-k="' + k.id + '">+ Add part</button>' +
+      '<a class="btn sm primary" href="#new-order" data-act="usekit" data-id="' + k.id + '">Sell this kit</a></div></section>';
+  }
+
+  /* Order builder */
+  let draft = null;
+  const newDraft = kitId => ({ id: null, customer: '', phone: '', place: '', kitId: kitId || null, items: kitId ? S.kits.find(k => k.id === kitId).items.map(i => ({ ...i })) : [], labour: kitId ? 15000 : 0 });
+  V['new-order'] = () => {
+    if (!draft) draft = newDraft('k1');
+    const editing = !!draft.id;
+    return '<div class="head"><div><h1>' + (editing ? 'Edit order ' + esc(draft.id) : 'New order') + '</h1><p>Start from a kit, then change anything the customer wants. Stock is checked as you go.</p></div>' +
+      '<div class="steps"><span><b>1</b> Customer</span><span><b>2</b> Pick a kit</span><span><b>3</b> Adjust parts</span><span><b>4</b> Save</span></div></div>' +
+      '<div class="grid2"><div style="display:flex;flex-direction:column;gap:18px;min-width:0">' +
+      '<section class="card"><div class="card-h"><h2>1. Customer</h2></div><div class="card-b"><div class="form-grid">' +
+      '<label class="f">Name<input id="c-name" data-act="dfield" data-f="customer" value="' + esc(draft.customer) + '" placeholder="e.g. Pradeep Rout"></label>' +
+      '<label class="f">Phone<input id="c-phone" data-act="dfield" data-f="phone" inputmode="tel" value="' + esc(draft.phone) + '" placeholder="98xxx xxxxx"></label>' +
+      '<label class="f">Site / village<input id="c-place" data-act="dfield" data-f="place" value="' + esc(draft.place) + '" placeholder="e.g. Pipili"></label>' +
+      '</div></div></section>' +
+      '<section class="card"><div class="card-h"><h2>2. Pick a kit</h2><span class="small muted">Picking a kit replaces the parts list below</span></div><div class="card-b"><div class="kit-pick">' +
+      S.kits.map(k => { const b = canBuild(k.items); return '<button class="kp' + (draft.kitId === k.id ? ' on' : '') + '" data-act="pickkit" data-id="' + k.id + '"><b>' + esc(k.name) + '</b><span class="small muted">' + (kwOf(k.items) ? kwOf(k.items).toFixed(2) + ' kWp · ' : '') + inr(priceOf(k.items)) + '</span><span class="small" style="color:var(--' + (b.n ? 'ok' : 'bad') + ')">' + (b.n ? b.n + ' in stock' : 'Not enough stock') + '</span></button>'; }).join('') +
+      '<button class="kp' + (draft.kitId === null ? ' on' : '') + '" data-act="pickkit" data-id=""><b>Custom</b><span class="small muted">Start with an empty list</span></button>' +
+      '</div></div></section>' +
+      '<section class="card" id="lines">' + linesCard() + '</section>' +
+      '</div><aside class="summary" id="summary">' + summaryCard() + '</aside></div>';
+  };
+  function linesCard() {
+    const rows = draft.items.map((i, ix) => {
+      const p = part(i.pid), a = Math.max(0, avail(i.pid, draft.id)), ok = a >= i.qty;
+      return '<tr><td><select id="ln-' + ix + '" data-act="swap" data-i="' + ix + '" aria-label="Part">' + partOptions(i.pid, x => x.cat === p.cat, 'brand') + '</select></td>' +
+        '<td><span class="stepper"><button data-act="step" data-i="' + ix + '" data-d="-1" aria-label="Less">−</button><input id="lq-' + ix + '" type="number" min="1" value="' + i.qty + '" data-act="lqty" data-i="' + ix + '" aria-label="Quantity"><button data-act="step" data-i="' + ix + '" data-d="1" aria-label="More">+</button></span> <span class="small muted">' + p.unit + '</span></td>' +
+        '<td>' + (ok ? pill('ok', qn(a) + ' free') : pill('bad', 'Short ' + qn(i.qty - a))) + '</td>' +
+        '<td class="r num">' + inr(p.price * i.qty) + '</td>' +
+        '<td><button class="x" data-act="ldel" data-i="' + ix + '" aria-label="Remove line">' + ICON.x + '</button></td></tr>';
+    }).join('');
+    return '<div class="card-h"><h2>3. Parts for this customer</h2><span class="small muted">' + draft.items.length + ' parts</span></div>' +
+      (draft.items.length ? '<div class="tbl-wrap"><table class="lines"><thead><tr><th>Part (swap brand or size here)</th><th>Qty</th><th>Godown</th><th class="r">Amount</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<div class="empty">No parts yet. Pick a kit above, or add parts one by one.</div>') +
+      '<div class="addline"><button class="btn" data-act="lpick">+ Add a part</button><span class="small muted" style="align-self:center">Search by brand or code, e.g. extra battery or net meter</span></div>';
+  }
+  function summaryCard() {
+    const kw = kwOf(draft.items), parts = priceOf(draft.items), cost = costOf(draft.items), total = parts + Number(draft.labour || 0);
+    const sh = shortages(draft.items, draft.id);
+    const canReserve = draft.items.length && !sh.length;
+    return '<section class="card"><div class="card-h"><h2>Order summary</h2>' + (draft.id ? pill(STATUS[(S.projects.find(p => p.id === draft.id) || {}).status || 'quote'].cls, STATUS[(S.projects.find(p => p.id === draft.id) || {}).status || 'quote'].label) : '') + '</div><div class="card-b" style="display:flex;flex-direction:column;gap:14px">' +
+      '<div class="size-tag"><span class="n num">' + kw.toFixed(2) + '</span><span>kWp system</span></div>' +
+      '<div><div class="sum-row"><span>Parts</span><span class="num">' + inr(parts) + '</span></div>' +
+      '<div class="sum-row" style="align-items:center"><label for="labour">Installation & labour</label><input id="labour" type="number" min="0" step="500" data-act="dfield" data-f="labour" value="' + Number(draft.labour || 0) + '" class="qty-in" style="width:110px"></div>' +
+      '<div class="sum-row total"><span>Customer pays</span><span class="num">' + inr(total) + '</span></div>' +
+      '<div class="sum-row small muted"><span>Your parts cost</span><span class="num">' + inr(cost) + '</span></div>' +
+      '<div class="sum-row small muted"><span>Margin on parts</span><span class="num">' + inr(parts - cost) + (parts ? ' (' + Math.round((parts - cost) / parts * 100) + '%)' : '') + '</span></div></div>' +
+      (draft.items.length ? (sh.length
+        ? '<div class="check-box bad"><b>' + sh.length + ' part' + (sh.length > 1 ? 's' : '') + ' not in godown</b>' + sh.map(s => '<span>' + esc(part(s.pid).name) + ': need ' + qn(s.need) + ', free ' + qn(s.have) + '</span>').join('') + '<span class="small">Save as a quotation. The shortage goes to the purchase list.</span></div>'
+        : '<div class="check-box ok"><b>All parts available</b><span>You can reserve stock for this customer now.</span></div>') : '') +
+      '<div style="display:flex;flex-direction:column;gap:8px"><button class="btn primary" data-act="saveorder" data-s="reserved"' + (canReserve ? '' : ' disabled') + '>Save and reserve stock</button>' +
+      '<button class="btn" data-act="saveorder" data-s="quote"' + (draft.items.length ? '' : ' disabled') + '>Save as quotation</button>' +
+      (draft.id ? '<button class="btn ghost" data-act="canceledit">Cancel</button>' : '') + '</div>' +
+      '<p class="note">Reserving holds these parts for this customer, so the same panels are never promised twice. Stock leaves the godown only on dispatch.</p>' +
+      '</div></section>';
+  }
+  const refreshDraft = (lines) => { if (lines) $('#lines').innerHTML = linesCard(); $('#summary').innerHTML = summaryCard(); };
+
+  let orderFilter = 'open';
+  V.orders = () => {
+    const counts = Object.fromEntries(Object.keys(STATUS).map(s => [s, S.projects.filter(p => p.status === s).length]));
+    const list = S.projects.filter(p => orderFilter === 'open' ? (p.status === 'quote' || p.status === 'reserved' || p.status === 'dispatched') : p.status === orderFilter)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    return '<div class="head"><div><h1>Orders</h1><p>Each order moves left to right: quotation, reserve stock, dispatch to site, installed.</p></div><a class="btn primary" href="#new-order" data-act="usekit" data-id="k1">+ New order</a></div>' +
+      '<div class="pipe">' + Object.entries(STATUS).map(([k, s]) => '<button class="' + (orderFilter === k ? 'on' : '') + '" data-act="ofilter" data-id="' + k + '"><span class="n">' + counts[k] + '</span><span class="t">' + s.label + '</span></button>').join('') + '</div>' +
+      '<div class="toolbar"><button class="chip' + (orderFilter === 'open' ? ' on' : '') + '" data-act="ofilter" data-id="open">All open orders</button></div>' +
+      '<section class="card">' + (list.length ? list.map(orderRow).join('') : '<div class="empty">No orders here.</div>') + '</section>';
+  };
+  function orderRow(o) {
+    const st = STATUS[o.status], total = priceOf(o.items) + Number(o.labour || 0), sh = o.status === 'quote' ? shortages(o.items, o.id) : [];
+    let acts = '';
+    if (o.status === 'quote') acts = '<button class="btn sm" data-act="editorder" data-id="' + o.id + '">Edit</button><button class="btn sm primary" data-act="reserve" data-id="' + o.id + '"' + (sh.length ? ' disabled title="Some parts are short"' : '') + '>Reserve stock</button>';
+    if (o.status === 'reserved') acts = '<button class="btn sm" data-act="unreserve" data-id="' + o.id + '">Release</button><button class="btn sm primary" data-act="dispatch" data-id="' + o.id + '">Dispatch to site</button>';
+    if (o.status === 'dispatched') acts = '<button class="btn sm" data-act="return" data-id="' + o.id + '">Return leftover</button><button class="btn sm primary" data-act="installed" data-id="' + o.id + '">Mark installed</button>';
+    if (o.status === 'installed') acts = '<button class="btn sm" data-act="vieworder" data-id="' + o.id + '">View parts</button>';
+    return '<div class="order"><div style="min-width:0"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="who">' + esc(o.customer) + '</span>' + pill(st.cls, st.label) +
+      (sh.length ? pill('bad', sh.length + ' part' + (sh.length > 1 ? 's' : '') + ' short') : '') + '</div>' +
+      '<div class="meta"><span class="mono">' + esc(o.id) + '</span><span>' + esc(o.place) + '</span><span>' + kwOf(o.items).toFixed(2) + ' kWp</span><span class="num">' + inr(total) + '</span><span>' + fmtDate(o.date) + '</span>' +
+      (o.returns && o.returns.length ? '<span>Returned: ' + o.returns.map(r => qn(r.qty) + ' ' + part(r.pid).unit + ' ' + esc(part(r.pid).name)).join(', ') + '</span>' : '') + '</div></div>' +
+      '<div class="btns"><button class="btn sm ghost" data-act="vieworder" data-id="' + o.id + '">Parts</button>' + (o.status === 'installed' ? '' : acts) + '</div></div>';
+  }
+
+  V.buy = () => {
+    const list = buyList();
+    const total = list.reduce((t, x) => t + x.qty * x.p.cost, 0);
+    return '<div class="head"><div><h1>Purchase list</h1><p>Worked out for you from open quotations and minimum stock. Quantities are rounded to supplier packs, like 100 m cable coils.</p></div>' +
+      '<div class="btns"><button class="btn" data-act="copybuy"' + (list.length ? '' : ' disabled') + '>Copy for supplier</button><button class="btn primary" data-act="buycsv"' + (list.length ? '' : ' disabled') + '>Download CSV</button></div></div>' +
+      '<section class="card"><div class="card-h"><h2>' + list.length + ' parts to order</h2><span class="num"><span class="muted">Estimated </span><b>' + inr(total) + '</b></span></div>' +
+      (list.length ? '<div class="tbl-wrap"><table><thead><tr><th>Part</th><th class="r">Free now</th><th class="r">In quotations</th><th class="r">Order qty</th><th class="r">Approx cost</th><th>Why</th><th></th></tr></thead><tbody>' +
+        list.map(x => '<tr><td><div class="pname">' + esc(x.p.name) + '</div><div class="mono">' + esc(x.p.sku) + '</div></td><td class="r num">' + qn(x.a) + '</td><td class="r num">' + qn(x.d) + '</td><td class="r num"><b>' + qn(x.qty) + ' ' + x.p.unit + '</b></td><td class="r num">' + inr(x.qty * x.p.cost) + '</td><td class="small muted" style="min-width:200px">' + x.reasons.map(esc).join('<br>') + '</td>' +
+          '<td><button class="btn sm" data-act="stockin" data-id="' + x.p.id + '" data-q="' + x.qty + '">Mark received</button></td></tr>').join('') +
+        '</tbody></table></div>' : '<div class="empty">Nothing to buy. Stock covers all quotations and minimum levels.</div>') + '</section>';
+  };
+
+  let exportKind = 'stock';
+  V.reports = () => {
+    const ser = series(), cur = ser[ser.length - 1], prev = ser[ser.length - 2], labels = periodLabels(), n = ser.length;
+    const avg = s => s.n ? s.rev / s.n : 0;
+    const moves = S.moves.slice().sort((a, b) => b.date.localeCompare(a.date));
+    const stages = Object.keys(STATUS).map(k => { const os = S.projects.filter(o => o.status === k); return { k, n: os.length, v: sum(os.map(billed)) }; });
+    const maxStage = Math.max(...stages.map(s => s.v), 1);
+    const byCat = Object.keys(CATS).map(c => ({ c, v: sum(S.parts.filter(p => p.cat === c).map(p => p.stock * p.cost)) })).sort((a, b) => b.v - a.v);
+    const totalCat = sum(byCat.map(x => x.v)) || 1;
+    const cover = S.parts.filter(p => p.pm > 0).map(p => ({ p, d: coverDays(p) })).sort((a, b) => a.d - b.d).slice(0, 8);
+    const kitM = S.kits.filter(k => k.items.length).map(k => { const pr = priceOf(k.items), m = pr - costOf(k.items); return { k, m, pct: pr ? m / pr * 100 : 0 }; }).sort((a, b) => b.m - a.m);
+    const maxKit = Math.max(...kitM.map(x => x.m), 1);
+    const slow = S.parts.filter(p => p.stock > 0 && idleDays(p) >= 45).sort((a, b) => b.stock * b.cost - a.stock * a.cost);
+    const sv = ser.map(s => s.sv), svTitles = ser.map((_, i) => i === n - 1 ? 'Now' : 'About ' + periodStart(i, n));
+    return '<div class="head"><div><h1>Insights</h1><p>How stock, sales and margin are moving, and what to do about it. Numbers update as you work.</p></div></div>' +
+      '<div class="kpis">' +
+      kpi({ icon: 'kits', tone: 'info', label: 'Systems delivered', value: cur.n, sub: 'last 30 days', delta: delta(cur.n, prev.n, true), spark: ser.map(s => s.n) }) +
+      kpi({ icon: 'trend', tone: 'sun', label: 'Capacity installed (kWp)', value: cur.kw.toFixed(1), sub: 'last 30 days', delta: delta(cur.kw, prev.kw, true), spark: ser.map(s => s.kw) }) +
+      kpi({ icon: 'orders', tone: 'plain', label: 'Average order value', value: cur.n ? inr(avg(cur)) : '-', sub: 'per system, with labour', delta: delta(avg(cur), avg(prev), true), spark: ser.map(avg) }) +
+      kpi({ icon: 'coin', tone: 'ok', label: 'Parts margin earned', value: inr(cur.margin), sub: (cur.rev ? Math.round(cur.margin / cur.rev * 100) : 0) + '% of billed value', delta: delta(cur.margin, prev.margin, true), spark: ser.map(s => s.margin) }) +
+      '</div>' +
+      '<div class="sec-title"><h2>What to act on</h2><p>Worked out from your stock, orders and usage</p></div>' + insCards(insights()) +
+      '<div class="grid2"><section class="card"><div class="card-h"><h2>Sales and margin<span class="sub">Last ' + n + ' periods of 30 days</span></h2>' + legend([['Billed', 'var(--series-1)'], ['Parts margin', 'var(--series-2)']]) + '</div>' +
+      '<div class="card-b"><div class="chart">' + barChart(ser, labels) + '</div>' +
+      tableView(['Period', 'Billed', 'Parts margin', 'Systems', 'kWp'], ser.map((s, i) => [periodTitle(i, n), inr(s.rev), inr(s.margin), s.n, s.kw.toFixed(1)])) + '</div></section>' +
+      '<section class="card"><div class="card-h"><h2>Order pipeline<span class="sub">Value at each stage, all orders</span></h2></div><div style="padding:10px 0">' +
+      stages.map(s => '<div class="hrow k2"><span class="nm"><b>' + STATUS[s.k].label + '</b> <span class="muted">· ' + s.n + ' order' + (s.n === 1 ? '' : 's') + '</span></span>' + hbar(s.v / maxStage * 100, 'var(--series-1)') + '<span class="v">' + inr(s.v) + '</span></div>').join('') + '</div></section></div>' +
+      '<div class="grid2 even"><section class="card"><div class="card-h"><h2>Stock value over time<span class="sub">At purchase price</span></h2></div><div class="card-b"><div class="chart">' + areaChart(sv, periodLabels().map((l, i) => i === n - 1 ? 'Now' : l), svTitles, 'Stock value') + '</div>' +
+      tableView(['Period', 'Stock value', 'Bought in period'], ser.map((s, i) => [svTitles[i], inr(s.sv), inr(s.buy)])) + '</div></section>' +
+      '<section class="card"><div class="card-h"><h2>Where the money sits<span class="sub">Stock value by category</span></h2><span class="num"><b>' + inr(totalCat) + '</b></span></div><div style="padding:10px 0">' +
+      byCat.map(x => '<div class="hrow k2"><span class="nm">' + CATS[x.c] + '</span>' + hbar(x.v / byCat[0].v * 100, 'var(--series-1)') + '<span class="v">' + inr(x.v) + ' <span class="muted">' + Math.round(x.v / totalCat * 100) + '%</span></span></div>').join('') + '</div></section></div>' +
+      '<div class="grid2 even"><section class="card"><div class="card-h"><h2>How long will stock last?<span class="sub">Free stock divided by usual monthly usage</span></h2></div><div style="padding:10px 0">' +
+      cover.map(x => '<div class="hrow h-link" data-act="part" data-id="' + x.p.id + '"><span class="nm">' + esc(x.p.name) + '</span>' + hbar(x.d / 120 * 100, x.d < 21 ? 'var(--bad)' : x.d < 45 ? 'var(--warn)' : 'var(--series-1)') + '<span class="v">' + pill(coverTone(x.d), coverText(x.d)) + '</span></div>').join('') + '</div></section>' +
+      '<section class="card"><div class="card-h"><h2>Which systems earn the most<span class="sub">Parts margin per complete system</span></h2></div><div style="padding:10px 0">' +
+      kitM.map(x => '<div class="hrow k2"><span class="nm">' + esc(x.k.name) + '</span>' + hbar(x.m / maxKit * 100, 'var(--series-1)') + '<span class="v">' + inr(x.m) + ' <span class="muted">' + Math.round(x.pct) + '%</span></span></div>').join('') + '</div></section></div>' +
+      '<section class="card"><div class="card-h"><h2>Slow-moving stock<span class="sub">No movement for 45 days or more</span></h2><span class="num"><span class="muted">Tied up </span><b>' + inr(sum(slow.map(p => p.stock * p.cost))) + '</b></span></div>' +
+      (slow.length ? '<div class="tbl-wrap"><table><thead><tr><th>Part</th><th class="r">In godown</th><th class="r">Value</th><th>Idle for</th></tr></thead><tbody>' +
+        slow.map(p => '<tr class="click" data-act="part" data-id="' + p.id + '"><td><div class="pname">' + esc(p.name) + '</div><div class="mono">' + esc(p.sku) + '</div></td><td class="r num">' + qn(p.stock) + ' ' + p.unit + '</td><td class="r num">' + inr(p.stock * p.cost) + '</td><td>' + pill(idleDays(p) >= 60 ? 'warn' : 'plain', idleDays(p) + ' days') + '</td></tr>').join('') + '</tbody></table></div>'
+        : '<div class="empty">Nothing is sitting idle.</div>') + '</section>' +
+      '<section class="card"><div class="card-h"><h2>Export for Tally</h2><div class="chips seg">' +
+      '<button class="chip' + (exportKind === 'stock' ? ' on' : '') + '" data-act="exp" data-id="stock">Closing stock</button><button class="chip' + (exportKind === 'sales' ? ' on' : '') + '" data-act="exp" data-id="sales">Dispatched item lines</button></div></div>' +
+      '<div class="card-b" style="display:flex;flex-direction:column;gap:10px"><p class="small muted">Tally keeps the accounts. This system keeps the parts. Each dispatched system is broken into its item lines so Tally stock matches the godown.</p>' +
+      '<textarea class="export" id="export" readonly aria-label="Export text">' + esc(exportText()) + '</textarea><div class="btns"><button class="btn dark" data-act="copyexp">Copy</button><button class="btn" data-act="expcsv">Download CSV</button></div></div></section>' +
+      '<section class="card"><div class="card-h"><h2>Stock register</h2><span class="small muted">' + moves.length + ' entries</span></div>' + movesTable(moves) + '</section>';
+  };
+  function exportText() {
+    if (exportKind === 'stock') return 'Item Name,Part Code,Stock Group,Unit,Closing Qty,Rate,Value\n' +
+      S.parts.map(p => ['"' + p.name + '"', p.sku, CATS[p.cat], p.unit, p.stock, p.cost, p.stock * p.cost].join(',')).join('\n');
+    return 'Order,Date,Party,Item Name,Part Code,Qty,Unit,Rate,Amount\n' +
+      S.projects.filter(p => p.status === 'dispatched' || p.status === 'installed').flatMap(o => o.items.map(i => { const p = part(i.pid); return [o.id, o.date, '"' + o.customer + '"', '"' + p.name + '"', p.sku, i.qty, p.unit, p.price, i.qty * p.price].join(','); })).join('\n');
+  }
+
+  /* ---------- Actions ---------- */
+  function partDetail(id) {
+    const p = part(id), r = reserved(id), hist = S.moves.filter(m => m.pid === id).sort((a, b) => b.date.localeCompare(a.date));
+    const usedIn = S.kits.filter(k => k.items.some(i => i.pid === id)).map(k => esc(k.name)).join(', ') || 'No kit';
+    const holders = S.projects.filter(o => o.status === 'reserved' && o.items.some(i => i.pid === id));
+    modal(p.name,
+      '<div class="mono">' + esc(p.brand) + ' · ' + esc(p.sku) + ' · ' + CATS[p.cat] + '</div>' +
+      '<div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi card" style="box-shadow:none"><span class="lbl">In godown</span><span class="val">' + qn(p.stock) + '</span><span class="sub">' + p.unit + '</span></div>' +
+      '<div class="kpi card" style="box-shadow:none"><span class="lbl">Reserved</span><span class="val">' + qn(r) + '</span><span class="sub">' + (holders.map(h => esc(h.customer)).join(', ') || 'none') + '</span></div>' +
+      '<div class="kpi card" style="box-shadow:none"><span class="lbl">Free</span><span class="val">' + qn(p.stock - r) + '</span><span class="sub">minimum ' + qn(p.min) + '</span></div></div>' +
+      '<p class="small"><b>Used in kits:</b> ' + usedIn + '</p>' +
+      '<div class="form-grid"><label class="f">Minimum stock<input id="pd-min" type="number" min="0" value="' + p.min + '"></label><label class="f">Buy price (₹)<input id="pd-cost" type="number" min="0" value="' + p.cost + '"></label><label class="f">Sell price (₹)<input id="pd-price" type="number" min="0" value="' + p.price + '"></label></div>' +
+      '<h3>History</h3><div class="card" style="box-shadow:none">' + movesTable(hist) + '</div>',
+      [{ label: 'Correct stock count', fn: () => adjustModal(id) }, { label: 'Receive stock', fn: () => stockIn(id) }, { label: 'Save changes', cls: 'primary', fn: () => {
+        p.min = Math.max(0, +$('#pd-min').value || 0); p.cost = Math.max(0, +$('#pd-cost').value || 0); p.price = Math.max(0, +$('#pd-price').value || 0);
+        save(); closeModal(); render(); toast('Saved ' + p.name);
+      } }], true);
+  }
+  function stockIn(pid, q) {
+    modal('Receive stock',
+      '<label class="f">Find part<input id="si-find" type="search" autocomplete="off" placeholder="Type a brand or name, e.g. exide"></label><label class="f">Part<select id="si-part">' + partOptions(pid || '') + '</select></label>' +
+      '<div class="form-grid" style="grid-template-columns:1fr 1fr"><label class="f">Quantity received<input id="si-qty" type="number" min="1" value="' + (q || '') + '" placeholder="e.g. 20"></label><label class="f">Supplier bill no.<input id="si-inv" placeholder="e.g. WE/2310"></label></div>' +
+      '<label class="f">Supplier<input id="si-sup" placeholder="e.g. Waaree Energies"></label>',
+      [{ label: 'Cancel', cls: 'ghost', fn: closeModal }, { label: 'Add to stock', cls: 'primary', fn: () => {
+        const id = $('#si-part').value, n = Math.floor(+$('#si-qty').value);
+        if (!part(id)) { toast('Choose a part first'); return; }
+        if (!(n > 0)) { toast('Enter how many you received'); return; }
+        const p = part(id); p.stock += n;
+        S.moves.push({ date: daysAgo(0), pid: id, qty: n, type: 'in', ref: [$('#si-sup').value.trim() || 'Supplier', $('#si-inv').value.trim() && 'Inv ' + $('#si-inv').value.trim()].filter(Boolean).join(', ') });
+        notify('stock', 'Godown received ' + qn(n) + ' × ' + p.name, 'Added to stock. ' + qn(avail(p.id)) + ' ' + p.unit + ' now free.', '#stock', LOG);
+        save(); closeModal(); render(); toast('Added ' + qn(n) + ' ' + p.unit + ' ' + p.name);
+      } }]);
+  }
+  function adjustModal(pid) {
+    const p = part(pid);
+    modal('Correct stock count',
+      '<p>' + esc(p.name) + '. System says <b>' + qn(p.stock) + ' ' + p.unit + '</b>.</p>' +
+      '<div class="form-grid" style="grid-template-columns:1fr 1fr"><label class="f">Actual count in godown<input id="ad-n" type="number" min="0" value="' + p.stock + '"></label><label class="f">Reason<select id="ad-r"><option>Physical count</option><option>Damaged</option><option>Lost / stolen</option><option>Used for demo / service</option></select></label></div>',
+      [{ label: 'Cancel', cls: 'ghost', fn: () => partDetail(pid) }, { label: 'Save count', cls: 'primary', fn: () => {
+        const n = Math.max(0, Math.floor(+$('#ad-n').value || 0)), d = n - p.stock;
+        if (d) { p.stock = n; S.moves.push({ date: daysAgo(0), pid, qty: d, type: 'adjust', ref: $('#ad-r').value }); save(); }
+        closeModal(); render(); toast(d ? 'Stock corrected by ' + (d > 0 ? '+' : '') + qn(d) : 'No change');
+      } }]);
+  }
+  function newPart() {
+    modal('New part',
+      '<div class="form-grid" style="grid-template-columns:2fr 1fr"><label class="f">Name<input id="np-name" placeholder="e.g. Havells 4 kW on-grid inverter"></label><label class="f">Brand<input id="np-brand" list="brand-list" autocomplete="off" placeholder="e.g. Havells"></label></div><datalist id="brand-list">' + [...new Set(S.parts.map(p => p.brand))].sort().map(b => '<option value="' + esc(b) + '">').join('') + '</datalist>' +
+      '<div class="form-grid"><label class="f">Category<select id="np-cat">' + Object.entries(CATS).map(([k, v]) => '<option value="' + k + '">' + v + '</option>').join('') + '</select></label>' +
+      '<label class="f">Unit<select id="np-unit"><option>pcs</option><option>m</option><option>set</option><option>pair</option><option>pack</option></select></label>' +
+      '<label class="f">Panel watts (if panel)<input id="np-w" type="number" min="0" placeholder="e.g. 550"></label>' +
+      '<label class="f">Buy price (₹)<input id="np-cost" type="number" min="0"></label><label class="f">Sell price (₹)<input id="np-price" type="number" min="0"></label><label class="f">Minimum stock<input id="np-min" type="number" min="0" value="5"></label></div>',
+      [{ label: 'Cancel', cls: 'ghost', fn: closeModal }, { label: 'Create part', cls: 'primary', fn: () => {
+        const name = $('#np-name').value.trim(); if (!name) { toast('Give the part a name'); return; }
+        const cat = $('#np-cat').value, n = S.parts.length + 1;
+        S.parts.push({ id: 'p' + Date.now(), sku: cat.slice(0, 3).toUpperCase() + '-NEW-' + n, name, brand: $('#np-brand').value.trim() || 'Other', cat, unit: $('#np-unit').value, w: +$('#np-w').value || undefined, stock: 0, pm: 0, idle: 0, min: +$('#np-min').value || 0, cost: +$('#np-cost').value || 0, price: +$('#np-price').value || 0, pack: 1 });
+        save(); closeModal(); render(); toast('Created ' + name + '. Use Receive stock to add quantity.');
+      } }]);
+  }
+  function viewOrder(id) {
+    const o = S.projects.find(p => p.id === id);
+    modal(o.id + ' · ' + o.customer,
+      '<div class="print-only"><h2>Saurasakti Solar · Quotation ' + esc(o.id) + '</h2><p>' + fmtDate(o.date) + ' · ' + esc(o.customer) + '</p></div>' +
+      '<p class="muted">' + esc(o.place) + (o.phone ? ' · ' + esc(o.phone) : '') + ' · ' + kwOf(o.items).toFixed(2) + ' kWp</p>' +
+      '<div class="card" style="box-shadow:none"><div class="tbl-wrap"><table><thead><tr><th>Part</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>' +
+      o.items.map(i => { const p = part(i.pid); return '<tr><td>' + esc(p.name) + '</td><td class="r num">' + qn(i.qty) + ' ' + p.unit + '</td><td class="r num">' + inr(p.price) + '</td><td class="r num">' + inr(p.price * i.qty) + '</td></tr>'; }).join('') +
+      '<tr><td>Installation & labour</td><td></td><td></td><td class="r num">' + inr(o.labour || 0) + '</td></tr>' +
+      '<tr><td><b>Total</b></td><td></td><td></td><td class="r num"><b>' + inr(priceOf(o.items) + Number(o.labour || 0)) + '</b></td></tr></tbody></table></div></div>',
+      [{ label: 'Print quotation', fn: () => window.print() }, { label: 'Close', cls: 'primary', fn: closeModal }], true);
+  }
+  function returnModal(id) {
+    const o = S.projects.find(p => p.id === id);
+    modal('Return leftover from site',
+      '<p class="muted">Enter what came back from ' + esc(o.customer) + '\'s site. It goes back into the godown.</p>' +
+      '<div class="card" style="box-shadow:none"><div class="tbl-wrap"><table><thead><tr><th>Part</th><th class="r">Sent</th><th class="r">Returned</th></tr></thead><tbody>' +
+      o.items.map((i, ix) => { const p = part(i.pid); return '<tr><td>' + esc(p.name) + '</td><td class="r num">' + qn(i.qty) + ' ' + p.unit + '</td><td class="r"><input class="qty-in" style="width:80px" type="number" min="0" max="' + i.qty + '" id="rt-' + ix + '" value="' + (p.cat === 'cable' && ix < 3 ? Math.min(i.qty, 4) : 0) + '" aria-label="Returned ' + esc(p.name) + '"></td></tr>'; }).join('') +
+      '</tbody></table></div></div><p class="note">Cable is usually cut at site, so some metres often come back.</p>',
+      [{ label: 'Cancel', cls: 'ghost', fn: closeModal }, { label: 'Add back to stock', cls: 'primary', fn: () => {
+        let n = 0;
+        o.items.forEach((i, ix) => { const q = Math.min(i.qty, Math.max(0, Math.floor(+$('#rt-' + ix).value || 0))); if (q) {
+          part(i.pid).stock += q; n++;
+          S.moves.push({ date: daysAgo(0), pid: i.pid, qty: q, type: 'return', ref: o.id + ' leftover from site' });
+          const ex = o.returns.find(r => r.pid === i.pid); if (ex) ex.qty += q; else o.returns.push({ pid: i.pid, qty: q });
+        } });
+        save(); closeModal(); render(); toast(n ? n + ' item' + (n > 1 ? 's' : '') + ' returned to godown' : 'Nothing returned');
+      } }], true);
+  }
+  function confirmBox(title, text, label, fn) {
+    modal(title, '<p>' + text + '</p>', [{ label: 'Cancel', cls: 'ghost', fn: closeModal }, { label, cls: 'primary', fn: () => { fn(); closeModal(); render(); } }]);
+  }
+
+  function act(el, ev) {
+    const a = el.dataset.act, id = el.dataset.id;
+    const o = id && S.projects.find(p => p.id === id);
+    switch (a) {
+      case 'close': closeModal(); break;
+      case 'nbell': case 'nread': case 'nclear': case 'nset': case 'nback': case 'ntab': case 'ntest': case 'nopen': notifAct(a, el); break;
+      case 'scrim': if (ev.target === el) closeModal(); break;
+      case 'mact': { const f = modalActions[+el.dataset.i]; if (f) f.fn(); break; }
+      case 'reset': confirmBox('Reset sample data?', 'This removes every change made in this demo and loads the original sample data.', 'Reset', () => { S = seed(); initState(); draft = null; save(); toast('Sample data restored'); }); break;
+      case 'part': partDetail(id); break;
+      case 'stockin': stockIn(id, el.dataset.q); break;
+      case 'newpart': newPart(); break;
+      /* stock filters are handled above */
+      case 'usekit': draft = newDraft(id); if (route() === 'new-order') { ev.preventDefault(); render(); } break;
+      case 'kitdel': { const k = S.kits.find(x => x.id === el.dataset.k); k.items.splice(+el.dataset.i, 1); save(); render(); break; }
+      case 'kitpick': { const k = S.kits.find(x => x.id === el.dataset.k); openPicker('Add parts to ' + k.name, pid => k.items.some(i => i.pid === pid), pid => { k.items.push({ pid, qty: 1 }); save(); render(); }); break; }
+      case 'newkit':
+        modal('New system kit', '<label class="f">Kit name<input id="nk-name" placeholder="e.g. 2 kW On-grid"></label><label class="f">Short note<input id="nk-note" placeholder="Who is it for?"></label><p class="note">You can add parts to it right after.</p>',
+          [{ label: 'Cancel', cls: 'ghost', fn: closeModal }, { label: 'Create kit', cls: 'primary', fn: () => {
+            const name = $('#nk-name').value.trim(); if (!name) { toast('Give the kit a name'); return; }
+            S.kits.push({ id: 'k' + Date.now(), name, note: $('#nk-note').value.trim(), items: [] }); save(); closeModal(); render(); toast('Kit created. Add its parts below.');
+          } }]);
+        break;
+      case 'pickkit': { const kid = id || null; const keep = draft.id; Object.assign(draft, { kitId: kid, items: kid ? S.kits.find(k => k.id === kid).items.map(i => ({ ...i })) : [] }); if (!keep && kid && !draft.labour) draft.labour = 15000; render(); break; }
+      case 'step': { const it = draft.items[+el.dataset.i]; it.qty = Math.max(1, it.qty + +el.dataset.d); refreshDraft(true); break; }
+      case 'ldel': draft.items.splice(+el.dataset.i, 1); refreshDraft(true); break;
+      case 'lpick': openPicker('Add parts to this order', pid => draft.items.some(i => i.pid === pid), pid => { draft.items.push({ pid, qty: 1 }); refreshDraft(true); }); break;
+      case 'pkadd': pickAdd(id); break;
+      case 'fcat': case 'fbrand': case 'fstatus': case 'fclear': case 'frem': case 'fmore': case 'ftoggle': filterAct(a, el); break;
+      case 'saveorder': {
+        if (!draft.customer.trim()) { toast('Enter the customer name first'); $('#c-name').focus(); break; }
+        const status = el.dataset.s;
+        if (status === 'reserved' && shortages(draft.items, draft.id).length) { toast('Some parts are short. Save as quotation instead.'); break; }
+        let rec;
+        if (draft.id) { rec = S.projects.find(p => p.id === draft.id); Object.assign(rec, { customer: draft.customer.trim(), phone: draft.phone, place: draft.place, kitId: draft.kitId, items: draft.items.map(i => ({ ...i })), labour: Number(draft.labour || 0), status }); }
+        else { rec = { id: 'SS-' + (S.seq++), customer: draft.customer.trim(), phone: draft.phone, place: draft.place, kitId: draft.kitId, items: draft.items.map(i => ({ ...i })), labour: Number(draft.labour || 0), status, date: daysAgo(0), returns: [] }; S.projects.push(rec); }
+        notify('order', (status === 'reserved' ? 'Stock reserved for ' : 'Quotation saved for ') + rec.customer, rec.id + ' · ' + inr(billed(rec)) + '.', '#orders', LOG);
+        save(); draft = null; orderFilter = 'open'; toast(rec.id + ' saved' + (status === 'reserved' ? ', stock reserved' : ' as quotation')); go('orders'); break;
+      }
+      case 'canceledit': draft = null; go('orders'); break;
+      case 'ofilter': orderFilter = id; render(); break;
+      case 'editorder': draft = { id: o.id, customer: o.customer, phone: o.phone, place: o.place, kitId: o.kitId, items: o.items.map(i => ({ ...i })), labour: o.labour }; go('new-order'); break;
+      case 'vieworder': viewOrder(id); break;
+      case 'reserve': o.status = 'reserved'; notify('order', 'Stock reserved for ' + o.customer, o.id + ' · ' + inr(billed(o)) + '. These parts are now held for this customer.', '#orders', LOG); save(); render(); toast('Stock reserved for ' + o.customer); break;
+      case 'unreserve': confirmBox('Release reserved stock?', 'The parts held for ' + esc(o.customer) + ' become free again. The order goes back to quotation.', 'Release', () => { o.status = 'quote'; save(); toast('Stock released'); }); break;
+      case 'dispatch': confirmBox('Dispatch to ' + (o.place || 'site') + '?', 'These ' + o.items.length + ' parts leave the godown for ' + esc(o.customer) + '. Leftover can be returned later.', 'Dispatch', () => {
+        o.items.forEach(i => { part(i.pid).stock -= i.qty; S.moves.push({ date: daysAgo(0), pid: i.pid, qty: -i.qty, type: 'out', ref: o.id + ' ' + o.customer }); });
+        notify('dispatch', o.customer + ' system dispatched', o.id + ' · ' + o.items.length + ' parts left the godown for ' + (o.place || 'site') + '.', '#orders', LOG);
+        o.status = 'dispatched'; save(); toast(o.id + ' dispatched. Stock updated.');
+      }); break;
+      case 'return': returnModal(id); break;
+      case 'installed': o.status = 'installed'; notify('done', o.customer + ' system installed', o.id + ' · ' + kwOf(o.items).toFixed(2) + ' kWp at ' + (o.place || 'site') + '.', '#orders', LOG); save(); render(); toast(o.customer + ' marked installed'); break;
+      case 'copybuy': copy(buyList().map(x => x.p.name + ' (' + x.p.sku + '): ' + qn(x.qty) + ' ' + x.p.unit).join('\n'), 'Purchase list copied'); break;
+      case 'exp': exportKind = id; render(); break;
+      case 'stockcsv': download('saurasakti-stock-' + stamp() + '.csv', csv([['Brand', 'Part', 'Code', 'Category', 'Unit', 'In godown', 'Reserved', 'Free', 'Buy price', 'Sell price', 'Status']].concat(
+        S.parts.filter(p => matchPart(p, stockFilter)).sort(SORTS[stockFilter.sort][1]).map(p => [p.brand, p.name, p.sku, CATS[p.cat], p.unit, p.stock, reserved(p.id), p.stock - reserved(p.id), p.cost, p.price, stateLabel[stockState(p)]])))); break;
+      case 'buycsv': download('saurasakti-purchase-list-' + stamp() + '.csv', csv([['Brand', 'Part', 'Code', 'Order qty', 'Unit', 'Approx cost', 'Why']].concat(
+        buyList().map(x => [x.p.brand, x.p.name, x.p.sku, x.qty, x.p.unit, x.qty * x.p.cost, x.reasons.join('; ')])))); break;
+      case 'expcsv': download('saurasakti-tally-' + (exportKind === 'stock' ? 'closing-stock' : 'dispatched-lines') + '-' + stamp() + '.csv', exportText()); break;
+      case 'guide': closeNotif(); guide(); break;
+      case 'gguide': closeModal(); go(id); break;
+      case 'copyexp': copy($('#export').value, 'Copied. Paste into Excel, then import to Tally.', $('#export')); break;
+    }
+  }
+  const csvCell = v => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+  function download(name, text) {
+    try {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8' })); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      toast(name + ' saved to your Downloads folder.', { title: 'Download' });
+    } catch (e) { toast('Downloads are not available here. Use Copy instead.', { title: 'Download' }); }
+  }
+  const stamp = () => daysAgo(0);
+  function copy(text, msg, field) {
+    const fallback = () => { if (field) { field.focus(); field.select(); toast('Press Ctrl+C to copy the selected text'); } else toast('Copy is blocked here'); };
+    try { navigator.clipboard.writeText(text).then(() => toast(msg), fallback); } catch (e) { fallback(); }
+  }
+
+  document.addEventListener('click', ev => {
+    const el = ev.target.closest('[data-act]');
+    if (!el || el.tagName === 'INPUT' || el.tagName === 'SELECT') return;
+    if (el.disabled) return;
+    act(el, ev);
+  });
+  document.addEventListener('input', ev => {
+    const el = ev.target;
+    if (el.id === 'q') { stockFilter.q = el.value; refreshFilter('stock'); return; }
+    if (el.id === 'pk-q') { pk.q = el.value; refreshFilter('pk'); return; }
+    if (el.id === 'si-find') {
+      const t = tokens(el.value), ps = S.parts.filter(p => t.every(x => hay(p).includes(x))), sel = $('#si-part');
+      sel.innerHTML = ps.length ? partOptions(ps[0].id, p => ps.includes(p)) : '<option value="">No part matches</option>'; return;
+    }
+    const a = el.dataset.act;
+    if (a === 'dfield') { draft[el.dataset.f] = el.dataset.f === 'labour' ? Math.max(0, +el.value || 0) : el.value; if (el.dataset.f === 'labour') { const v = el.value; refreshDraft(false); const l = $('#labour'); l.focus(); l.value = v; } }
+  });
+  document.addEventListener('change', ev => {
+    const el = ev.target, a = el.dataset.act;
+    if (a === 'lqty') { draft.items[+el.dataset.i].qty = Math.max(1, Math.floor(+el.value || 1)); refreshDraft(true); }
+    if (a === 'npref') {
+      const k = el.dataset.k;
+      if (k === 'desktop' && el.checked) { askDesktop().then(ok => { S.prefs.desktop = ok; persist(); renderNotif(); }); return; }
+      S.prefs[k] = el.checked; persist(); if (k === 'live') render(); return;
+    }
+    if (a === 'fsort') { stockFilter.sort = el.value; refreshFilter('stock'); }
+    if (a === 'swap') { draft.items[+el.dataset.i].pid = el.value; refreshDraft(true); }
+    if (a === 'kitqty') { const k = S.kits.find(x => x.id === el.dataset.k); k.items[+el.dataset.i].qty = Math.max(1, Math.floor(+el.value || 1)); save(); render(); }
+  });
+  document.addEventListener('keydown', ev => {
+    const t = ev.target, typing = /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName), modalOpen = !!$('#layer').innerHTML;
+    if (ev.key === 'Escape' && notifOpen) { closeNotif(); return; }
+    if (ev.key === 'Enter' && t.classList && t.classList.contains('ni')) { t.click(); return; }
+    if (ev.key === 'Escape' && modalOpen) { closeModal(); return; }
+    if (ev.key === '/' && !typing && !modalOpen && route() === 'stock') { ev.preventDefault(); $('#q').focus(); return; }
+    if (ev.key === 'Escape' && t.id === 'q') { if (t.value) { stockFilter.q = ''; refreshFilter('stock'); } else t.blur(); return; }
+    if (ev.key === 'Enter' && t.id === 'pk-q' && pk) { const first = pickerRows().find(p => !pk.taken(p.id) && !pk.added.includes(p.id)); if (first) { ev.preventDefault(); pickAdd(first.id); } }
+  });
+
+  /* ---------- Live notifications ---------- */
+  Object.assign(ICON, {
+    bell: svgI('<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/>'),
+    check: svgI('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>'),
+    gear: svgI('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>')
+  });
+  const NT = { out: ['bad', 'alert'], low: ['warn', 'alert'], order: ['info', 'orders'], dispatch: ['sun', 'orders'], done: ['ok', 'check'], stock: ['ok', 'stock'], info: ['plain', 'bell'] };
+  const PREF_OF = { out: 'low', low: 'low', order: 'order', dispatch: 'order', done: 'order', stock: 'stock' };
+  const LOG = { silent: true, force: true };
+  const BASE_TITLE = document.title;
+  const SEV = { ok: 0, warn: 1, bad: 2 };
+  let notifOpen = false, notifTab = 'all', notifView = 'list';
+
+  const unreadCount = () => S.notes.filter(n => !n.read).length;
+  const ago = ts => {
+    const s = Math.max(0, (Date.now() - ts) / 1000); if (s < 45) return 'just now';
+    const m = Math.round(s / 60); if (m < 60) return m + ' min ago';
+    const h = Math.round(m / 60); if (h < 24) return h + ' h ago';
+    const d = Math.round(h / 24); return d === 1 ? 'Yesterday' : d + ' days ago';
+  };
+  function chime() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext, c = new AC(), o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+      o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(1320, t + .12);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .35);
+      o.connect(g); g.connect(c.destination); o.start(); o.stop(t + .4);
+    } catch (e) { /* sound is optional */ }
+  }
+  const bellHTML = () => '<button type="button" class="btn bell" id="bell" data-act="nbell" aria-haspopup="dialog" aria-expanded="' + notifOpen + '" aria-label="Notifications, ' + unreadCount() + ' unread">' + ICON.bell +
+    '<span class="bdg"' + (unreadCount() ? '' : ' hidden') + '>' + (unreadCount() > 9 ? '9+' : unreadCount()) + '</span></button>';
+  function updateBell() {
+    const u = unreadCount(), b = $('#bell .bdg'), bell = $('#bell');
+    if (b) { b.hidden = !u; b.textContent = u > 9 ? '9+' : u; }
+    if (bell) { bell.setAttribute('aria-label', 'Notifications, ' + u + ' unread'); bell.setAttribute('aria-expanded', notifOpen); }
+    try { document.title = (u ? '(' + u + ') ' : '') + BASE_TITLE; } catch (e) { /* title is cosmetic */ }
+  }
+  function ringBell() { const b = $('#bell'); if (b) { b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring'); } }
+
+  function notify(type, title, text, href, o) {
+    o = o || {};
+    const k = PREF_OF[type];
+    if (!o.force && k && S.prefs[k] === false) return null;
+    const n = { id: 'n' + Date.now() + Math.floor(Math.random() * 1e4), ts: Date.now(), type, title, text, href: href || '', read: false };
+    S.notes.unshift(n); if (S.notes.length > 50) S.notes.length = 50;
+    persist();
+    if (!o.silent) {
+      if (S.prefs.banner) toast(text, { title, href: n.href, id: n.id, tone: NT[type][0], ms: 5500 });
+      if (S.prefs.sound) chime();
+      if (S.prefs.desktop && typeof Notification !== 'undefined' && Notification.permission === 'granted') { try { new Notification(title, { body: text }); } catch (e) { /* not allowed here */ } }
+      ringBell();
+    }
+    updateBell(); if (notifOpen) renderNotif();
+    return n;
+  }
+  function scanStock() {
+    if (!S.alerted) return;
+    S.parts.forEach(p => {
+      const st = stockState(p), was = S.alerted[p.id];
+      if (was === undefined) { S.alerted[p.id] = st; return; }
+      if (st === was) return;
+      S.alerted[p.id] = st;
+      if (SEV[st] > SEV[was]) notify(st === 'bad' ? 'out' : 'low', p.name + (st === 'bad' ? ' is out of stock' : ' is running low'), qn(Math.max(0, avail(p.id))) + ' ' + p.unit + ' free · minimum ' + qn(p.min) + '. Add it to the purchase list.', '#buy');
+    });
+  }
+  function initState() {
+    if (!S.alerted) { S.alerted = {}; S.parts.forEach(p => { S.alerted[p.id] = stockState(p); }); persist(); }
+  }
+
+  const noteRow = n => '<div class="ni' + (n.read ? '' : ' unread') + '" role="button" tabindex="0" data-act="nopen" data-id="' + n.id + '"><span class="ico sm ' + NT[n.type][0] + '">' + ICON[NT[n.type][1]] + '</span>' +
+    '<div class="grow"><div class="nt">' + esc(n.title) + '</div><div class="nx">' + esc(n.text) + '</div></div><span class="nm">' + ago(n.ts) + '</span></div>';
+  function renderNotif() {
+    const box = $('#notif'), old = $('#notif .nlist'), top = old ? old.scrollTop : 0;
+    if (!notifOpen) { box.innerHTML = ''; return; }
+    const u = unreadCount(), p = S.prefs;
+    let body, head;
+    if (notifView === 'settings') {
+      const row = (k, label, hint) => '<label class="nrow"><span><b>' + label + '</b><small>' + hint + '</small></span><span class="sw"><input type="checkbox" data-act="npref" data-k="' + k + '"' + (p[k] ? ' checked' : '') + '><span></span></span></label>';
+      head = '<button type="button" class="btn ghost sm" data-act="nback">‹ Back</button><b>Settings</b><span class="np-sp"></span>';
+      body = '<div class="nlist">' + row('low', 'Low and out-of-stock alerts', 'When a part drops below its minimum') + row('order', 'Order updates', 'Quotations, reservations, dispatch and installation') +
+        row('stock', 'Godown stock movements', 'Stock received or corrected') + row('banner', 'Show banners', 'A pop-up in the corner for each new alert') +
+        row('desktop', 'Desktop notifications', 'Alerts even when this tab is in the background') + row('sound', 'Play a sound', 'A soft chime for each new alert') +
+        row('live', 'Simulate live activity', 'Demo only: other staff update stock and orders every few seconds') + '</div>' +
+        '<div class="nfoot btns"><button type="button" class="btn sm" data-act="ntest">Send a test notification</button><button type="button" class="btn sm" data-act="guide">Demo guide</button><button type="button" class="btn sm" data-act="reset">Reset sample data</button></div>';
+    } else {
+      const list = notifTab === 'unread' ? S.notes.filter(n => !n.read) : S.notes, d0 = new Date(); d0.setHours(0, 0, 0, 0);
+      const grp = (label, items) => items.length ? '<div class="ngrp">' + label + '</div>' + items.map(noteRow).join('') : '';
+      head = '<b>Notifications</b><span class="np-t"><button type="button" class="btn ghost sm" data-act="nread"' + (u ? '' : ' disabled') + '>Mark all read</button>' +
+        '<button type="button" class="btn ghost sm" data-act="nclear"' + (S.notes.length ? '' : ' disabled') + '>Clear</button><button type="button" class="btn ghost sm" data-act="nset" aria-label="Notification settings">' + ICON.gear + '</button></span>';
+      body = '<div class="nseg"><div class="chips seg"><button type="button" class="chip' + (notifTab === 'all' ? ' on' : '') + '" data-act="ntab" data-id="all">All</button>' +
+        '<button type="button" class="chip' + (notifTab === 'unread' ? ' on' : '') + '" data-act="ntab" data-id="unread">Unread' + (u ? ' <span class="cnt">' + u + '</span>' : '') + '</button></div></div>' +
+        '<div class="nlist">' + (list.length ? grp('Today', list.filter(n => n.ts >= d0)) + grp('Earlier', list.filter(n => n.ts < d0)) : '<div class="empty">' + (notifTab === 'unread' ? 'You are all caught up.' : 'No notifications yet.') + '</div>') + '</div>';
+    }
+    box.innerHTML = '<div class="np" role="dialog" aria-label="Notifications"><div class="np-h">' + head + '</div>' + body + '</div>';
+    const nl = $('#notif .nlist'); if (nl) nl.scrollTop = top;
+  }
+  function closeNotif() { if (!notifOpen) return; notifOpen = false; renderNotif(); updateBell(); }
+  async function askDesktop() {
+    try {
+      if (typeof Notification === 'undefined') throw new Error('unsupported');
+      const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+      if (perm === 'granted') return true;
+    } catch (e) { /* fall through to the hint below */ }
+    toast('Desktop notifications are blocked in this preview. They work in the full app.', { title: 'Notifications' });
+    return false;
+  }
+  function notifAct(a, el) {
+    const id = el.dataset.id;
+    if (a === 'nbell') { notifOpen = !notifOpen; notifView = 'list'; renderNotif(); updateBell(); return; }
+    if (a === 'nread') S.notes.forEach(n => { n.read = true; });
+    if (a === 'nclear') S.notes = [];
+    if (a === 'nset') notifView = 'settings';
+    if (a === 'nback') notifView = 'list';
+    if (a === 'ntab') notifTab = id;
+    if (a === 'ntest') notify('info', 'Test notification', 'This is how live alerts will appear.', '', {});
+    if (a === 'nopen') { const n = S.notes.find(x => x.id === id); if (n) { n.read = true; persist(); closeNotif(); if (n.href) go(n.href.slice(1)); } }
+    persist(); updateBell(); renderNotif();
+  }
+
+  /* Simulated activity from other staff, so the demo shows live behaviour */
+  function liveQuote(name, place, kitId, by) {
+    const k = S.kits.find(x => x.id === kitId); if (!k) return null;
+    const o = { id: 'SS-' + (S.seq++), customer: name, phone: '', place, kitId, items: k.items.map(i => ({ ...i })), labour: 15000, status: 'quote', date: daysAgo(0), returns: [] };
+    S.projects.push(o);
+    return ['order', 'New quotation from ' + name, by + ' created ' + o.id + ' for a ' + kwOf(o.items).toFixed(1) + ' kWp system, ' + inr(billed(o)) + '.', '#orders'];
+  }
+  const LIVE = [
+    () => { const p = part('p30'); if (!p) return null; p.stock += 12; S.moves.push({ date: daysAgo(0), pid: p.id, qty: 12, type: 'in', ref: 'Amaron distributor, Inv AM-5521' }); return ['stock', 'Godown received 12 × ' + p.name, 'Added by the store keeper. ' + qn(avail(p.id)) + ' ' + p.unit + ' now free.', '#stock']; },
+    () => liveQuote('Meena Das', 'Chandrasekharpur, Bhubaneswar', 'k1', 'Sales team'),
+    () => { const o = S.projects.find(x => x.id === 'SS-1042' && x.status === 'quote'); return o ? ['order', o.customer + ' approved the quotation', o.id + ' for ' + inr(billed(o)) + '. Reserve stock to hold the parts.', '#orders'] : null; },
+    () => { const p = part('p28'); if (!p || p.stock < 2) return null; p.stock -= 2; S.moves.push({ date: daysAgo(0), pid: p.id, qty: -2, type: 'adjust', ref: 'Damaged in transit' }); return ['stock', 'Stock corrected: ' + p.name, '2 pcs written off as damaged in transit.', '#stock']; },
+    () => { const o = S.projects.find(x => x.id === 'SS-1039' && x.status === 'dispatched'); if (!o) return null; o.status = 'installed'; return ['done', o.customer + ' system installed', o.id + ' · ' + kwOf(o.items).toFixed(2) + ' kWp at ' + o.place + '. Site team marked it complete.', '#orders']; },
+    () => liveQuote('Anil Kumar Dash', 'Rourkela', 'k4', 'Sales team'),
+    () => ['info', 'Supplier update', 'Loom Solar confirmed delivery of 20 panels by tomorrow evening.', '#buy']
+  ];
+  function liveRefresh() {
+    const t = document.activeElement;
+    if ($('#layer').innerHTML || route() === 'new-order' || (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))) return;
+    render();
+  }
+  function runLive() {
+    while ((S.liveIx || 0) < LIVE.length) {
+      const ev = LIVE[S.liveIx++]();
+      if (ev) { notify(ev[0], ev[1], ev[2], ev[3]); save(); liveRefresh(); return; }
+    }
+  }
+  const FAST = /[?&]live=fast/.test(location.search);
+  if (!navigator.webdriver || FAST) {
+    setTimeout(function tick() { if (S.prefs.live && !document.hidden) runLive(); setTimeout(tick, FAST ? 2000 : 26000 + Math.random() * 14000); }, FAST ? 1500 : 14000);
+  }
+  setInterval(() => { if (notifOpen && notifView === 'list') renderNotif(); }, 30000);
+
+  function guide() {
+    const items = [
+      ['stock', 'Find any part', 'Type a brand or part name, or use the Brand and Category filters.'],
+      ['kits', 'See what you can build', 'Each kit shows how many complete systems the godown can make, and what is holding it back.'],
+      ['new-order', 'Make an order', 'Pick a kit, swap a brand, add a part, then reserve the stock.'],
+      ['orders', 'Follow an order', 'Dispatch it, return leftover cable, mark it installed.'],
+      ['buy', 'Buy what is missing', 'The purchase list works itself out. Copy it or download it as a CSV file.'],
+      ['reports', 'Read the insights', 'Hover over the charts, see how long stock will last, export for Tally.'],
+      ['home', 'Watch live alerts', 'Use the bell. New activity arrives every half minute, and low stock raises an alert by itself.']
+    ];
+    modal('Welcome to Saurasakti Stock Manager',
+      '<p>This is a working demo with sample data. Click anything you like. Your changes stay in this browser only, and "Reset sample data" (bottom of the sidebar, or the bell settings on a phone) puts everything back.</p>' +
+      '<div class="glist">' + items.map((it, i) => '<button type="button" class="gitem" data-act="gguide" data-id="' + it[0] + '"><span class="gn">' + (i + 1) + '</span><span><b>' + it[1] + '</b><small>' + it[2] + '</small></span></button>').join('') + '</div>',
+      [{ label: 'Start exploring', cls: 'primary', fn: closeModal }], true);
+  }
+  function render() {
+    const r = route(); tipEl.hidden = true;
+    let grp = '';
+    $('#nav').innerHTML = ROUTES.map(([k, label, ic, g]) => (g && g !== grp ? (grp = g, '<div class="grp">' + g + '</div>') : '') +
+      '<a href="#' + k + '" class="' + (k === r ? 'on' : '') + (k === 'new-order' ? ' cta' : '') + '"' + (k === r ? ' aria-current="page"' : '') + (k === 'new-order' ? ' data-act="usekit" data-id="k1"' : '') + '>' + ICON[ic] + '<span>' + label + '</span></a>').join('');
+    $('#view').innerHTML = V[r]();
+    const hd = $('#view .head');
+    if (hd) { const tools = document.createElement('div'); tools.className = 'tools'; [...hd.children].slice(1).forEach(x => tools.appendChild(x)); tools.insertAdjacentHTML('beforeend', bellHTML()); hd.appendChild(tools); }
+    $('#bar').replaceChildren(...(hd ? [hd] : []));
+    const lv = $('#live'); lv.className = 'live' + (S.prefs.live ? '' : ' off'); lv.textContent = S.prefs.live ? 'Live' : 'Live paused';
+    updateBell();
+  }
+  document.addEventListener('click', ev => { if (notifOpen && !ev.composedPath().some(x => x.id === 'notif' || x.id === 'bell')) closeNotif(); });
+  window.addEventListener('hashchange', () => { closeModal(); closeNotif(); render(); window.scrollTo(0, 0); });
+  initState();
+  render();
+  try {
+    const forced = /[?&]guide/.test(location.search);
+    if (forced || (!navigator.webdriver && !localStorage.getItem('saurasakti-guided'))) { localStorage.setItem('saurasakti-guided', '1'); setTimeout(guide, 500); }
+  } catch (e) { /* no storage: skip the first-visit guide */ }
+})();
+</script>
+</body>
+</html>
