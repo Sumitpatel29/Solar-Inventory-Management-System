@@ -1,8 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/", "destination": "/site", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/site/index.html" },
     { "source": "/favicon.svg", "destination": "/site/favicon.svg" }
   ],
   "headers": [
