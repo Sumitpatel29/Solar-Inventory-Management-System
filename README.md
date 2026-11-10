@@ -14,11 +14,9 @@ Parts-level inventory for a solar panel dealer (Saurasakti). A solar system is b
 | `PLAN.md` | Problem, approach, phased plan for the real system, questions for the owner |
 
 ## Deploy on Vercel
-1. Import this repository at vercel.com.
-2. Set **Root Directory** to `site`, **Framework Preset** to **Other**, and leave the build command and output directory empty.
-3. Deploy.
+Import this repository at vercel.com, set **Root Directory** to the repository root, and deploy with the **Other** framework preset. The root `vercel.json` routes `/` to the built page in `site/` and routes the favicon. No build command is needed.
 
-Or from a terminal: `cd site && npx vercel --prod`.
+Alternatively, set **Root Directory** to `site`; its own `vercel.json` serves the page directly. For a terminal deployment from the repository root, run `npx vercel --prod`.
 
 ## Run locally
 Open `demo/standalone.html` in a browser, or run `python3 -m http.server --directory site 8000` and visit http://localhost:8000.
